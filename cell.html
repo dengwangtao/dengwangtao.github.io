@@ -133,6 +133,19 @@
       background: #263244;
     }
 
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+      border-color: var(--border);
+    }
+
+    button:disabled:hover {
+      transform: none;
+      border-color: var(--border);
+      background: var(--panel-2);
+    }
+
     button.primary {
       background: #075985;
       border-color: #0ea5e9;
@@ -409,7 +422,8 @@
           <div class="card-title">表格编辑</div>
           <div class="toolbar">
             <button class="primary" id="btnPresetRecord">载入 record 示例</button>
-            <button id="btnClear">清空</button>
+            <button id="btnUndo" disabled>撤回</button>
+            <button id="btnClear" class="danger">清空</button>
             <button class="success" id="btnCopy">复制结果</button>
           </div>
         </div>
@@ -515,6 +529,8 @@
     };
 
     const state = {
+      history: [],
+      maxHistory: 50,
       table: {
         columns: [
           { width: 20, align: 'center' },
@@ -674,10 +690,34 @@
       $('tableWrap').innerHTML = html.join('');
     }
 
+    function cloneTable(table) {
+      return JSON.parse(JSON.stringify(table));
+    }
+
+    function pushHistory() {
+      state.history.push(cloneTable(state.table));
+      if (state.history.length > state.maxHistory) state.history.shift();
+      updateUndoButton();
+    }
+
+    function undo() {
+      if (!state.history.length) return;
+      state.table = state.history.pop();
+      rerenderAll();
+    }
+
+    function updateUndoButton() {
+      const btn = $('btnUndo');
+      if (!btn) return;
+      btn.disabled = state.history.length === 0;
+      btn.textContent = state.history.length === 0 ? '撤回' : `撤回 (${state.history.length})`;
+    }
+
     function rerenderAll() {
       makeTableEditor();
       renderOutput();
       updateSizeInputs();
+      updateUndoButton();
     }
 
     function normalizeRows() {
@@ -688,18 +728,21 @@
     }
 
     function addColumn() {
+      pushHistory();
       state.table.columns.push({ width: 12, align: 'global' });
       state.table.rows.forEach(row => row.push(''));
       rerenderAll();
     }
 
     function addRow() {
+      pushHistory();
       state.table.rows.push(Array(state.table.columns.length).fill(''));
       rerenderAll();
     }
 
     function deleteColumn(col) {
       if (state.table.columns.length <= 1) return;
+      pushHistory();
       state.table.columns.splice(col, 1);
       state.table.rows.forEach(row => row.splice(col, 1));
       rerenderAll();
@@ -707,6 +750,7 @@
 
     function deleteRow(row) {
       if (state.table.rows.length <= 1) return;
+      pushHistory();
       state.table.rows.splice(row, 1);
       rerenderAll();
     }
@@ -714,6 +758,7 @@
     function swapColumns(a, b) {
       const table = state.table;
       if (b < 0 || b >= table.columns.length) return;
+      pushHistory();
       [table.columns[a], table.columns[b]] = [table.columns[b], table.columns[a]];
       table.rows.forEach(row => [row[a], row[b]] = [row[b], row[a]]);
       rerenderAll();
@@ -722,11 +767,13 @@
     function swapRows(a, b) {
       const table = state.table;
       if (b < 0 || b >= table.rows.length) return;
+      pushHistory();
       [table.rows[a], table.rows[b]] = [table.rows[b], table.rows[a]];
       rerenderAll();
     }
 
     function applySize() {
+      pushHistory();
       const rows = Math.max(1, Math.min(80, Number($('rowCount').value || 1)));
       const cols = Math.max(1, Math.min(40, Number($('colCount').value || 1)));
 
@@ -776,6 +823,7 @@
       if (act === 'row-up') swapRows(row, row - 1);
       if (act === 'row-down') swapRows(row, row + 1);
       if (act === 'dup-row') {
+        pushHistory();
         state.table.rows.splice(row + 1, 0, [...state.table.rows[row]]);
         rerenderAll();
       }
@@ -786,19 +834,22 @@
     $('btnDelLastRow').onclick = () => deleteRow(state.table.rows.length - 1);
     $('btnDelLastCol').onclick = () => deleteColumn(state.table.columns.length - 1);
     $('btnApplySize').onclick = applySize;
+    $('btnUndo').onclick = undo;
 
     $('btnClear').onclick = () => {
+      pushHistory();
       state.table = { columns: [{ width: 12, align: 'global' }], rows: [['']] };
       rerenderAll();
     };
 
     $('btnPresetRecord').onclick = () => {
+      pushHistory();
       $('commentStyle').value = 'block';
       $('globalAlign').value = 'center';
       $('borderStyle').value = 'ascii';
       $('indentSize').value = 4;
       $('cellPadding').value = 1;
-      $('widthMode').value = 'manual';
+      $('widthMode').value = 'auto';
       state.table = {
         columns: [
           { width: 20, align: 'center' },
