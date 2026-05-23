@@ -614,10 +614,13 @@
       return blockIndent + '/*\n' + body + '\n' + blockIndent + '*/';
     }
 
-    function renderOutput() {
-      $('preview').textContent = withComment(renderTable(state.table));
+    function updateSizeInputs() {
       $('rowCount').value = state.table.rows.length;
       $('colCount').value = state.table.columns.length;
+    }
+
+    function renderOutput() {
+      $('preview').textContent = withComment(renderTable(state.table));
     }
 
     function escapeHtml(s) {
@@ -674,6 +677,7 @@
     function rerenderAll() {
       makeTableEditor();
       renderOutput();
+      updateSizeInputs();
     }
 
     function normalizeRows() {
