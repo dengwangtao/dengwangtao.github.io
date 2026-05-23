@@ -1,976 +1,846 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>ASCII 表格注释生成器</title>
-        <style>
-            :root {
-                --bg: #0f172a;
-                --panel: #111827;
-                --panel-2: #1f2937;
-                --text: #e5e7eb;
-                --muted: #9ca3af;
-                --border: #334155;
-                --accent: #38bdf8;
-                --accent-2: #22c55e;
-                --danger: #ef4444;
-                --warning: #f59e0b;
-                --input: #020617;
-                --shadow: rgba(0, 0, 0, 0.35);
-            }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASCII 表格注释生成器</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --panel-2: #1f2937;
+      --panel-3: #172033;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --border: #334155;
+      --accent: #38bdf8;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --input: #020617;
+      --shadow: rgba(0, 0, 0, 0.35);
+    }
 
-            * {
-                box-sizing: border-box;
-            }
+    * { box-sizing: border-box; }
 
-            body {
-                margin: 0;
-                min-height: 100vh;
-                font-family:
-                    ui-sans-serif,
-                    system-ui,
-                    -apple-system,
-                    BlinkMacSystemFont,
-                    "Segoe UI",
-                    sans-serif;
-                background:
-                    radial-gradient(
-                        circle at top left,
-                        #1e3a8a 0,
-                        transparent 30%
-                    ),
-                    var(--bg);
-                color: var(--text);
-            }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, #1e3a8a 0, transparent 30%), var(--bg);
+      color: var(--text);
+    }
 
-            .app {
-                width: calc(100vw - 64px);
-                max-width: 1880px;
-                min-width: 980px;
-                margin: 0 auto;
-                padding: 28px 0 40px;
-            }
+    .app {
+      width: calc(100vw - 40px);
+      max-width: none;
+      min-width: 980px;
+      height: 100vh;
+      margin: 0 auto;
+      padding: 18px 0 20px;
+      display: flex;
+      flex-direction: column;
+    }
 
-            .hero {
-                display: flex;
-                justify-content: space-between;
-                gap: 18px;
-                align-items: flex-end;
-                margin-bottom: 22px;
-            }
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: center;
+      margin-bottom: 12px;
+      flex: 0 0 auto;
+    }
 
-            h1 {
-                margin: 0 0 8px;
-                font-size: 28px;
-                letter-spacing: 0.02em;
-            }
+    h1 {
+      margin: 0 0 4px;
+      font-size: 26px;
+      letter-spacing: 0.02em;
+    }
 
-            .subtitle {
-                color: var(--muted);
-                margin: 0;
-                line-height: 1.6;
-                font-size: 14px;
-            }
+    .subtitle {
+      color: var(--muted);
+      margin: 0;
+      line-height: 1.6;
+      font-size: 14px;
+    }
 
-            .layout {
-                display: grid;
-                grid-template-columns: minmax(720px, 1.08fr) minmax(
-                        680px,
-                        0.92fr
-                    );
-                gap: 22px;
-                align-items: start;
-            }
+    .layout {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(820px, 1.12fr) minmax(720px, 0.88fr);
+      gap: 18px;
+      align-items: stretch;
+    }
 
-            .card {
-                background:
-                    linear-gradient(
-                        180deg,
-                        rgba(255, 255, 255, 0.04),
-                        rgba(255, 255, 255, 0.02)
-                    ),
-                    var(--panel);
-                border: 1px solid var(--border);
-                border-radius: 18px;
-                box-shadow: 0 18px 60px var(--shadow);
-                overflow: hidden;
-            }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)), var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: 0 18px 60px var(--shadow);
+      overflow: hidden;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
 
-            .card-header {
-                padding: 16px 18px;
-                border-bottom: 1px solid var(--border);
-                display: flex;
-                justify-content: space-between;
-                gap: 12px;
-                align-items: center;
-                background: rgba(15, 23, 42, 0.58);
-            }
+    .card-header {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.58);
+    }
 
-            .card-title {
-                font-weight: 700;
-                letter-spacing: 0.02em;
-            }
+    .card-title {
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
 
-            .card-body {
-                padding: 20px;
-            }
+    .card-body {
+      padding: 16px;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
 
-            .toolbar {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 10px;
-                align-items: center;
-            }
+    .toolbar, .inline-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
 
-            button,
-            select,
-            input,
-            textarea {
-                font: inherit;
-            }
+    button, select, input, textarea {
+      font: inherit;
+    }
 
-            button {
-                border: 1px solid var(--border);
-                background: var(--panel-2);
-                color: var(--text);
-                padding: 8px 12px;
-                border-radius: 10px;
-                cursor: pointer;
-                transition:
-                    transform 0.12s ease,
-                    border-color 0.12s ease,
-                    background 0.12s ease;
-            }
+    button {
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+      white-space: nowrap;
+    }
 
-            button:hover {
-                transform: translateY(-1px);
-                border-color: var(--accent);
-                background: #263244;
-            }
+    button:hover {
+      transform: translateY(-1px);
+      border-color: var(--accent);
+      background: #263244;
+    }
 
-            button.primary {
-                background: #075985;
-                border-color: #0ea5e9;
-            }
+    button.primary {
+      background: #075985;
+      border-color: #0ea5e9;
+    }
 
-            button.success {
-                background: #14532d;
-                border-color: #22c55e;
-            }
+    button.success {
+      background: #14532d;
+      border-color: #22c55e;
+    }
 
-            button.danger {
-                background: #4c0519;
-                border-color: #be123c;
-            }
+    button.danger {
+      background: #4c0519;
+      border-color: #be123c;
+    }
 
-            .settings-grid {
-                display: grid;
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-                gap: 12px;
-                margin-bottom: 16px;
-            }
+    button.ghost {
+      padding: 5px 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      background: #0b1120;
+    }
 
-            .field {
-                display: grid;
-                gap: 6px;
-            }
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 1.25fr 0.9fr 1fr 0.72fr 0.72fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex: 0 0 auto;
+    }
 
-            label {
-                font-size: 12px;
-                color: var(--muted);
-            }
+    .field {
+      display: grid;
+      gap: 6px;
+    }
 
-            input,
-            select,
-            textarea {
-                width: 100%;
-                color: var(--text);
-                background: var(--input);
-                border: 1px solid var(--border);
-                border-radius: 10px;
-                padding: 9px 10px;
-                outline: none;
-            }
+    label {
+      font-size: 12px;
+      color: var(--muted);
+    }
 
-            textarea {
-                min-height: 74px;
-                resize: vertical;
-                line-height: 1.55;
-            }
+    input, select, textarea {
+      width: 100%;
+      color: var(--text);
+      background: var(--input);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 10px;
+      outline: none;
+    }
 
-            input:focus,
-            select:focus,
-            textarea:focus {
-                border-color: var(--accent);
-                box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.16);
-            }
+    textarea {
+      resize: vertical;
+      line-height: 1.55;
+    }
 
-            .section-title {
-                margin: 18px 0 10px;
-                color: #cbd5e1;
-                font-size: 14px;
-                font-weight: 700;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                gap: 10px;
-            }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.16);
+    }
 
-            .table-wrap {
-                overflow: auto;
-                border: 1px solid var(--border);
-                border-radius: 14px;
-                background: rgba(2, 6, 23, 0.45);
-            }
+    .section-title {
+      margin: 10px 0 8px;
+      color: #cbd5e1;
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
 
-            table.editor {
-                width: 100%;
-                border-collapse: collapse;
-                min-width: 980px;
-            }
+    .quick-panel {
+      display: grid;
+      grid-template-columns: 120px 120px 130px 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(2, 6, 23, 0.34);
+    }
 
-            table.editor th,
-            table.editor td {
-                border-bottom: 1px solid var(--border);
-                border-right: 1px solid var(--border);
-                padding: 7px;
-                vertical-align: top;
-            }
+    .quick-panel .wide {
+      grid-column: auto;
+    }
 
-            table.editor th:last-child,
-            table.editor td:last-child {
-                border-right: none;
-            }
-            table.editor tr:last-child td {
-                border-bottom: none;
-            }
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(2, 6, 23, 0.45);
+      flex: 1 1 auto;
+      min-height: 260px;
+    }
 
-            table.editor th {
-                position: sticky;
-                top: 0;
-                z-index: 1;
-                background: #172033;
-                color: #cbd5e1;
-                font-size: 12px;
-                text-align: left;
-            }
+    table.editor {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1040px;
+    }
 
-            .cell-text {
-                min-width: 120px;
-                min-height: 42px;
-                font-family: Consolas, Monaco, "Courier New", monospace;
-                font-size: 13px;
-                white-space: pre;
-            }
+    table.editor th, table.editor td {
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      padding: 8px;
+      vertical-align: top;
+    }
 
-            .mini {
-                width: 86px;
-                padding: 7px 8px;
-                font-size: 12px;
-            }
+    table.editor th:last-child, table.editor td:last-child { border-right: none; }
+    table.editor tr:last-child td { border-bottom: none; }
 
-            .row-actions,
-            .col-actions {
-                display: flex;
-                gap: 6px;
-                flex-wrap: wrap;
-            }
+    table.editor th {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      background: #172033;
+      color: #cbd5e1;
+      font-size: 12px;
+      text-align: left;
+      min-width: 164px;
+    }
 
-            .row-actions button,
-            .col-actions button {
-                padding: 6px 8px;
-                font-size: 12px;
-                border-radius: 8px;
-            }
+    table.editor th.row-head,
+    table.editor td.row-head {
+      position: sticky;
+      left: 0;
+      z-index: 2;
+      width: 116px;
+      min-width: 116px;
+      background: #111827;
+      text-align: center;
+    }
 
-            .preview {
-                min-height: 620px;
-                margin: 0;
-                overflow: auto;
-                padding: 18px;
-                background: #020617;
-                color: #d1fae5;
-                font-family: Consolas, Monaco, "Courier New", monospace;
-                font-size: 14px;
-                line-height: 1.45;
-                tab-size: 4;
-                white-space: pre;
-            }
+    table.editor th.row-head {
+      z-index: 4;
+      background: #172033;
+    }
 
-            .hint {
-                color: var(--muted);
-                font-size: 12px;
-                line-height: 1.6;
-                margin-top: 10px;
-            }
+    .col-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
 
-            .pill {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                padding: 5px 9px;
-                border-radius: 999px;
-                background: rgba(56, 189, 248, 0.12);
-                color: #bae6fd;
-                border: 1px solid rgba(56, 189, 248, 0.35);
-                font-size: 12px;
-            }
+    .col-tools {
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
 
-            @media (max-width: 1500px) {
-                .app {
-                    width: calc(100vw - 40px);
-                    min-width: 0;
-                }
+    .col-actions, .row-actions {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
 
-                .layout {
-                    grid-template-columns: 1fr;
-                }
+    .cell-text {
+      min-width: 148px;
+      min-height: 72px;
+      font-family: Consolas, Monaco, "Courier New", monospace;
+      font-size: 13px;
+      white-space: pre;
+      background: #020617;
+    }
 
-                .preview {
-                    min-height: 360px;
-                    max-height: 52vh;
-                }
+    .mini {
+      padding: 6px 7px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
 
-                table.editor {
-                    min-width: 920px;
-                }
-            }
+    .preview {
+      flex: 1 1 auto;
+      min-height: 0;
+      height: 100%;
+      margin: 0;
+      overflow: auto;
+      padding: 18px;
+      background: #020617;
+      color: #d1fae5;
+      font-family: Consolas, Monaco, "Courier New", monospace;
+      font-size: 14px;
+      line-height: 1.45;
+      tab-size: 4;
+      white-space: pre;
+    }
 
-            @media (max-width: 900px) {
-                .app {
-                    width: calc(100vw - 24px);
-                }
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+      margin-top: 10px;
+    }
 
-                .settings-grid {
-                    grid-template-columns: 1fr;
-                }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.12);
+      color: #bae6fd;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      font-size: 12px;
+    }
 
-                .hero {
-                    align-items: flex-start;
-                    flex-direction: column;
-                }
+    @media (max-width: 1500px) {
+      .app {
+        width: calc(100vw - 32px);
+        min-width: 0;
+        height: auto;
+        min-height: 100vh;
+      }
 
-                .card-header {
-                    align-items: flex-start;
-                    flex-direction: column;
-                }
-            }
-        </style>
-    </head>
-    <body>
-        <main class="app">
-            <div class="hero">
-                <div>
-                    <h1>ASCII 表格注释生成器</h1>
-                    <p class="subtitle">
-                        单表格版本。用于生成 C/C++
-                        结构说明、二进制协议布局、磁盘格式、日志格式等表格型注释。
-                    </p>
-                </div>
-                <span class="pill">单文件 HTML · 本地可用 · 无依赖</span>
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .card {
+        min-height: auto;
+      }
+
+      .preview {
+        min-height: 360px;
+        max-height: 52vh;
+      }
+
+      .settings-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .quick-panel {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 900px) {
+      .app {
+        width: calc(100vw - 20px);
+        padding-top: 12px;
+      }
+
+      .settings-grid,
+      .quick-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .hero,
+      .card-header,
+      .section-title {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="hero">
+      <div>
+        <h1>ASCII 表格注释生成器</h1>
+        <p class="subtitle">单表格版本。用于生成 C/C++ 结构说明、二进制协议布局、磁盘格式、日志格式等表格型注释。</p>
+      </div>
+      <span class="pill">单文件 HTML · 本地可用 · 无依赖</span>
+    </div>
+
+    <div class="layout">
+      <section class="card">
+        <div class="card-header">
+          <div class="card-title">表格编辑</div>
+          <div class="toolbar">
+            <button class="primary" id="btnPresetRecord">载入 record 示例</button>
+            <button id="btnClear">清空</button>
+            <button class="success" id="btnCopy">复制结果</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="settings-grid">
+            <div class="field">
+              <label>注释风格</label>
+              <select id="commentStyle">
+                <option value="block">C/C++ 块注释 /* ... */</option>
+                <option value="line_cpp">C++ 行注释 //</option>
+                <option value="line_shell">Shell/Python 行注释 #</option>
+                <option value="none">无注释包裹</option>
+              </select>
             </div>
-
-            <div class="layout">
-                <section class="card">
-                    <div class="card-header">
-                        <div class="card-title">表格编辑</div>
-                        <div class="toolbar">
-                            <button class="primary" id="btnPresetRecord">
-                                载入 record 示例
-                            </button>
-                            <button id="btnClear">清空</button>
-                            <button class="success" id="btnCopy">
-                                复制结果
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="settings-grid">
-                            <div class="field">
-                                <label>注释风格</label>
-                                <select id="commentStyle">
-                                    <option value="block">
-                                        C/C++ 块注释 /* ... */
-                                    </option>
-                                    <option value="line_cpp">
-                                        C++ 行注释 //
-                                    </option>
-                                    <option value="line_shell">
-                                        Shell/Python 行注释 #
-                                    </option>
-                                    <option value="none">无注释包裹</option>
-                                </select>
-                            </div>
-                            <div class="field">
-                                <label>全局单元格对齐</label>
-                                <select id="globalAlign">
-                                    <option value="center">居中</option>
-                                    <option value="left">左对齐</option>
-                                    <option value="right">右对齐</option>
-                                </select>
-                            </div>
-                            <div class="field">
-                                <label>边框样式</label>
-                                <select id="borderStyle">
-                                    <option value="ascii">ASCII: + - |</option>
-                                    <option value="unicodeSingle">
-                                        Unicode 单线: ┌─┬┐
-                                    </option>
-                                    <option value="unicodeDouble">
-                                        Unicode 双线: ╔═╦╗
-                                    </option>
-                                    <option value="compact">紧凑: - |</option>
-                                </select>
-                            </div>
-
-                            <div class="field">
-                                <label>表格缩进空格</label>
-                                <input
-                                    id="indentSize"
-                                    type="number"
-                                    min="0"
-                                    max="16"
-                                    value="4"
-                                />
-                            </div>
-                            <div class="field">
-                                <label>单元格左右 padding</label>
-                                <input
-                                    id="cellPadding"
-                                    type="number"
-                                    min="0"
-                                    max="8"
-                                    value="1"
-                                />
-                            </div>
-                            <div class="field">
-                                <label>列宽策略</label>
-                                <select id="widthMode">
-                                    <option value="auto">自动适配内容</option>
-                                    <option value="manual">
-                                        使用每列手动宽度
-                                    </option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="section-title">
-                            <span>单个表格内容</span>
-                            <span class="toolbar">
-                                <button id="btnAddCol">添加列</button>
-                                <button id="btnAddRow">添加行</button>
-                            </span>
-                        </div>
-                        <div class="table-wrap" id="tableWrap"></div>
-
-                        <p class="hint">
-                            说明：每个单元格支持多行文本。列宽自动模式会按所有行内容计算；手动模式会使用列设置中的宽度，内容过长时自动扩展，避免截断。每列可以使用全局对齐，也可以单独指定左、中、右对齐。
-                        </p>
-                    </div>
-                </section>
-
-                <section class="card">
-                    <div class="card-header">
-                        <div class="card-title">实时预览</div>
-                        <div class="toolbar">
-                            <button id="btnDownload">下载 .txt</button>
-                        </div>
-                    </div>
-                    <pre class="preview" id="preview"></pre>
-                </section>
+            <div class="field">
+              <label>全局对齐</label>
+              <select id="globalAlign">
+                <option value="center">居中</option>
+                <option value="left">左对齐</option>
+                <option value="right">右对齐</option>
+              </select>
             </div>
-        </main>
+            <div class="field">
+              <label>边框样式</label>
+              <select id="borderStyle">
+                <option value="ascii">ASCII: + - |</option>
+                <option value="unicodeSingle">Unicode 单线</option>
+                <option value="unicodeDouble">Unicode 双线</option>
+                <option value="compact">紧凑: - |</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>缩进</label>
+              <input id="indentSize" type="number" min="0" max="16" value="4" />
+            </div>
+            <div class="field">
+              <label>Padding</label>
+              <input id="cellPadding" type="number" min="0" max="8" value="1" />
+            </div>
+            <div class="field">
+              <label>列宽策略</label>
+              <select id="widthMode">
+                <option value="auto">自动适配</option>
+                <option value="manual">手动宽度</option>
+              </select>
+            </div>
+          </div>
 
-        <script>
-            const BORDER_STYLES = {
-                ascii: {
-                    tl: "+",
-                    tm: "+",
-                    tr: "+",
-                    ml: "+",
-                    mm: "+",
-                    mr: "+",
-                    bl: "+",
-                    bm: "+",
-                    br: "+",
-                    h: "-",
-                    v: "|",
-                },
-                unicodeSingle: {
-                    tl: "┌",
-                    tm: "┬",
-                    tr: "┐",
-                    ml: "├",
-                    mm: "┼",
-                    mr: "┤",
-                    bl: "└",
-                    bm: "┴",
-                    br: "┘",
-                    h: "─",
-                    v: "│",
-                },
-                unicodeDouble: {
-                    tl: "╔",
-                    tm: "╦",
-                    tr: "╗",
-                    ml: "╠",
-                    mm: "╬",
-                    mr: "╣",
-                    bl: "╚",
-                    bm: "╩",
-                    br: "╝",
-                    h: "═",
-                    v: "║",
-                },
-                compact: {
-                    tl: "",
-                    tm: "",
-                    tr: "",
-                    ml: "",
-                    mm: "",
-                    mr: "",
-                    bl: "",
-                    bm: "",
-                    br: "",
-                    h: "-",
-                    v: "|",
-                },
-            };
+          <div class="section-title">
+            <span>单个表格内容</span>
+          </div>
 
-            const state = {
-                table: {
-                    columns: [
-                        { width: 20, align: "center" },
-                        { width: 7, align: "center" },
-                        { width: 15, align: "center" },
-                        { width: 8, align: "center" },
-                        { width: 15, align: "center" },
-                    ],
-                    rows: [
-                        [
-                            "1bytes",
-                            "4bytes",
-                            "key len bytes",
-                            "4bytes",
-                            "value len bytes",
-                        ],
-                        [
-                            "type(0:del, 1:val)",
-                            "key len",
-                            "key data",
-                            "value len",
-                            "value data",
-                        ],
-                    ],
-                },
-            };
+          <div class="quick-panel">
+            <div class="field">
+              <label>行数</label>
+              <input id="rowCount" type="number" min="1" max="80" value="2" />
+            </div>
+            <div class="field">
+              <label>列数</label>
+              <input id="colCount" type="number" min="1" max="40" value="5" />
+            </div>
+            <div class="field">
+              <label>批量调整</label>
+              <button id="btnApplySize">应用行列数</button>
+            </div>
+            <div class="field wide">
+              <label>快速操作</label>
+              <div class="inline-tools">
+                <button id="btnAddRow">添加行</button>
+                <button id="btnAddCol">添加列</button>
+                <button id="btnDelLastRow">删末行</button>
+                <button id="btnDelLastCol">删末列</button>
+              </div>
+            </div>
+          </div>
 
-            const $ = (id) => document.getElementById(id);
+          <div class="table-wrap" id="tableWrap"></div>
 
-            function charLen(s) {
-                return Array.from(String(s ?? "")).reduce((n, ch) => {
-                    const code = ch.codePointAt(0);
-                    if (
-                        (code >= 0x1100 && code <= 0x11ff) ||
-                        (code >= 0x2e80 && code <= 0xa4cf) ||
-                        (code >= 0xac00 && code <= 0xd7a3) ||
-                        (code >= 0xf900 && code <= 0xfaff) ||
-                        (code >= 0xff00 && code <= 0xffef)
-                    ) {
-                        return n + 2;
-                    }
-                    return n + 1;
-                }, 0);
-            }
+          <p class="hint">
+            操作优化：列宽和对齐已经合并到列头；左侧固定显示行号和行操作；支持直接设置行列数批量扩展或裁剪。每个单元格支持多行文本。
+          </p>
+        </div>
+      </section>
 
-            function spaces(n) {
-                return " ".repeat(Math.max(0, n));
-            }
+      <section class="card">
+        <div class="card-header">
+          <div class="card-title">实时预览</div>
+          <div class="toolbar">
+            <button id="btnDownload">下载 .txt</button>
+          </div>
+        </div>
+        <pre class="preview" id="preview"></pre>
+      </section>
+    </div>
+  </main>
 
-            function alignText(text, width, align) {
-                text = String(text ?? "");
-                const len = charLen(text);
-                const diff = Math.max(0, width - len);
-                if (align === "left") return text + spaces(diff);
-                if (align === "right") return spaces(diff) + text;
-                const left = Math.floor(diff / 2);
-                const right = diff - left;
-                return spaces(left) + text + spaces(right);
-            }
+  <script>
+    const BORDER_STYLES = {
+      ascii: { tl: '+', tm: '+', tr: '+', ml: '+', mm: '+', mr: '+', bl: '+', bm: '+', br: '+', h: '-', v: '|' },
+      unicodeSingle: { tl: '┌', tm: '┬', tr: '┐', ml: '├', mm: '┼', mr: '┤', bl: '└', bm: '┴', br: '┘', h: '─', v: '│' },
+      unicodeDouble: { tl: '╔', tm: '╦', tr: '╗', ml: '╠', mm: '╬', mr: '╣', bl: '╚', bm: '╩', br: '╝', h: '═', v: '║' },
+      compact: { tl: '', tm: '', tr: '', ml: '', mm: '', mr: '', bl: '', bm: '', br: '', h: '-', v: '|' }
+    };
 
-            function splitLines(cell) {
-                const lines = String(cell ?? "").split("\n");
-                return lines.length ? lines : [""];
-            }
+    const state = {
+      table: {
+        columns: [
+          { width: 20, align: 'center' },
+          { width: 7, align: 'center' },
+          { width: 15, align: 'center' },
+          { width: 8, align: 'center' },
+          { width: 15, align: 'center' }
+        ],
+        rows: [
+          ['1bytes', '4bytes', 'key len bytes', '4bytes', 'value len bytes'],
+          ['type(0:del, 1:val)', 'key len', 'key data', 'value len', 'value data']
+        ]
+      }
+    };
 
-            function computeWidths(table) {
-                const padding = Number($("cellPadding").value || 0);
-                const widthMode = $("widthMode").value;
-                return table.columns.map((col, colIndex) => {
-                    const maxContent = Math.max(
-                        1,
-                        ...table.rows.flatMap((row) =>
-                            splitLines(row[colIndex] ?? "").map(charLen),
-                        ),
-                    );
-                    const manual = Number(col.width || 1);
-                    const base =
-                        widthMode === "manual"
-                            ? Math.max(manual, maxContent)
-                            : maxContent;
-                    return base + padding * 2;
-                });
-            }
+    const $ = (id) => document.getElementById(id);
 
-            function borderLine(widths, type, style) {
-                if ($("borderStyle").value === "compact") {
-                    return widths.map((w) => style.h.repeat(w)).join(style.v);
-                }
-                const left =
-                    type === "top"
-                        ? style.tl
-                        : type === "bottom"
-                          ? style.bl
-                          : style.ml;
-                const middle =
-                    type === "top"
-                        ? style.tm
-                        : type === "bottom"
-                          ? style.bm
-                          : style.mm;
-                const right =
-                    type === "top"
-                        ? style.tr
-                        : type === "bottom"
-                          ? style.br
-                          : style.mr;
-                return (
-                    left +
-                    widths.map((w) => style.h.repeat(w)).join(middle) +
-                    right
-                );
-            }
+    function charLen(s) {
+      return Array.from(String(s ?? '')).reduce((n, ch) => {
+        const code = ch.codePointAt(0);
+        if ((code >= 0x1100 && code <= 0x11ff) ||
+            (code >= 0x2e80 && code <= 0xa4cf) ||
+            (code >= 0xac00 && code <= 0xd7a3) ||
+            (code >= 0xf900 && code <= 0xfaff) ||
+            (code >= 0xff00 && code <= 0xffef)) return n + 2;
+        return n + 1;
+      }, 0);
+    }
 
-            function renderTable(table) {
-                const style = BORDER_STYLES[$("borderStyle").value];
-                const padding = Number($("cellPadding").value || 0);
-                const widths = computeWidths(table);
-                const lines = [];
+    function spaces(n) { return ' '.repeat(Math.max(0, n)); }
 
-                lines.push(borderLine(widths, "top", style));
-                table.rows.forEach((row, rowIndex) => {
-                    const cellLines = table.columns.map((_, colIndex) =>
-                        splitLines(row[colIndex] ?? ""),
-                    );
-                    const rowHeight = Math.max(
-                        ...cellLines.map((lines) => lines.length),
-                    );
-                    for (
-                        let lineIndex = 0;
-                        lineIndex < rowHeight;
-                        lineIndex++
-                    ) {
-                        const renderedCells = table.columns.map(
-                            (col, colIndex) => {
-                                const text =
-                                    cellLines[colIndex][lineIndex] ?? "";
-                                const contentWidth =
-                                    widths[colIndex] - padding * 2;
-                                const align =
-                                    col.align === "global"
-                                        ? $("globalAlign").value
-                                        : col.align;
-                                return (
-                                    spaces(padding) +
-                                    alignText(text, contentWidth, align) +
-                                    spaces(padding)
-                                );
-                            },
-                        );
-                        lines.push(
-                            style.v + renderedCells.join(style.v) + style.v,
-                        );
-                    }
-                    lines.push(
-                        borderLine(
-                            widths,
-                            rowIndex === table.rows.length - 1
-                                ? "bottom"
-                                : "middle",
-                            style,
-                        ),
-                    );
-                });
-                return lines;
-            }
+    function alignText(text, width, align) {
+      text = String(text ?? '');
+      const diff = Math.max(0, width - charLen(text));
+      if (align === 'left') return text + spaces(diff);
+      if (align === 'right') return spaces(diff) + text;
+      const left = Math.floor(diff / 2);
+      return spaces(left) + text + spaces(diff - left);
+    }
 
-            function withComment(lines) {
-                const style = $("commentStyle").value;
-                const indent = spaces(Number($("indentSize").value || 0));
-                if (style === "none")
-                    return lines.map((line) => indent + line).join("\n");
-                if (style === "line_cpp")
-                    return lines
-                        .map((line) => indent + "// " + line)
-                        .join("\n");
-                if (style === "line_shell")
-                    return lines.map((line) => indent + "# " + line).join("\n");
-                const body = lines.map((line) => indent + line).join("\n");
-                const blockIndent = spaces(
-                    Math.max(0, Number($("indentSize").value || 0) - 4),
-                );
-                return blockIndent + "/*\n" + body + "\n" + blockIndent + "*/";
-            }
+    function splitLines(cell) {
+      const lines = String(cell ?? '').split('\n');
+      return lines.length ? lines : [''];
+    }
 
-            function renderOutput() {
-                $("preview").textContent = withComment(
-                    renderTable(state.table),
-                );
-            }
+    function computeWidths(table) {
+      const padding = Number($('cellPadding').value || 0);
+      const widthMode = $('widthMode').value;
+      return table.columns.map((col, colIndex) => {
+        const maxContent = Math.max(1, ...table.rows.flatMap(row => splitLines(row[colIndex] ?? '').map(charLen)));
+        const manual = Number(col.width || 1);
+        const base = widthMode === 'manual' ? Math.max(manual, maxContent) : maxContent;
+        return base + padding * 2;
+      });
+    }
 
-            function escapeHtml(s) {
-                return String(s)
-                    .replaceAll("&", "&amp;")
-                    .replaceAll("<", "&lt;")
-                    .replaceAll(">", "&gt;")
-                    .replaceAll('"', "&quot;");
-            }
+    function borderLine(widths, type, style) {
+      if ($('borderStyle').value === 'compact') return widths.map(w => style.h.repeat(w)).join(style.v);
+      const left = type === 'top' ? style.tl : type === 'bottom' ? style.bl : style.ml;
+      const middle = type === 'top' ? style.tm : type === 'bottom' ? style.bm : style.mm;
+      const right = type === 'top' ? style.tr : type === 'bottom' ? style.br : style.mr;
+      return left + widths.map(w => style.h.repeat(w)).join(middle) + right;
+    }
 
-            function makeTableEditor() {
-                const table = state.table;
-                const root = $("tableWrap");
-                const html = [];
-                html.push('<table class="editor"><thead><tr>');
-                table.columns.forEach((col, i) => {
-                    html.push(`<th>列 ${i + 1}<div class="col-actions">
-          <button data-act="col-left" data-col="${i}">←</button>
-          <button data-act="col-right" data-col="${i}">→</button>
-          <button class="danger" data-act="del-col" data-col="${i}">删列</button>
-        </div></th>`);
-                });
-                html.push("<th>行操作</th></tr></thead><tbody>");
+    function renderTable(table) {
+      const style = BORDER_STYLES[$('borderStyle').value];
+      const padding = Number($('cellPadding').value || 0);
+      const widths = computeWidths(table);
+      const lines = [];
+      lines.push(borderLine(widths, 'top', style));
+      table.rows.forEach((row, rowIndex) => {
+        const cellLines = table.columns.map((_, colIndex) => splitLines(row[colIndex] ?? ''));
+        const rowHeight = Math.max(...cellLines.map(lines => lines.length));
+        for (let lineIndex = 0; lineIndex < rowHeight; lineIndex++) {
+          const renderedCells = table.columns.map((col, colIndex) => {
+            const text = cellLines[colIndex][lineIndex] ?? '';
+            const contentWidth = widths[colIndex] - padding * 2;
+            const align = col.align === 'global' ? $('globalAlign').value : col.align;
+            return spaces(padding) + alignText(text, contentWidth, align) + spaces(padding);
+          });
+          lines.push(style.v + renderedCells.join(style.v) + style.v);
+        }
+        lines.push(borderLine(widths, rowIndex === table.rows.length - 1 ? 'bottom' : 'middle', style));
+      });
+      return lines;
+    }
 
-                html.push("<tr>");
-                table.columns.forEach((col, i) => {
-                    html.push(`<td>
-          <div class="field"><label>宽度</label><input class="mini" type="number" min="1" max="120" value="${col.width}" data-act="width" data-col="${i}" /></div>
-          <div class="field"><label>对齐</label><select class="mini" data-act="align" data-col="${i}">
-            <option value="global" ${col.align === "global" ? "selected" : ""}>全局</option>
-            <option value="left" ${col.align === "left" ? "selected" : ""}>左</option>
-            <option value="center" ${col.align === "center" ? "selected" : ""}>中</option>
-            <option value="right" ${col.align === "right" ? "selected" : ""}>右</option>
-          </select></div>
+    function withComment(lines) {
+      const style = $('commentStyle').value;
+      const indentSize = Number($('indentSize').value || 0);
+      const indent = spaces(indentSize);
+      if (style === 'none') return lines.map(line => indent + line).join('\n');
+      if (style === 'line_cpp') return lines.map(line => indent + '// ' + line).join('\n');
+      if (style === 'line_shell') return lines.map(line => indent + '# ' + line).join('\n');
+      const body = lines.map(line => indent + line).join('\n');
+      const blockIndent = spaces(Math.max(0, indentSize - 4));
+      return blockIndent + '/*\n' + body + '\n' + blockIndent + '*/';
+    }
+
+    function renderOutput() {
+      $('preview').textContent = withComment(renderTable(state.table));
+      $('rowCount').value = state.table.rows.length;
+      $('colCount').value = state.table.columns.length;
+    }
+
+    function escapeHtml(s) {
+      return String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+    }
+
+    function makeTableEditor() {
+      const table = state.table;
+      const html = [];
+      html.push('<table class="editor"><thead><tr>');
+      html.push('<th class="row-head">行</th>');
+      table.columns.forEach((col, i) => {
+        html.push(`<th>
+          <div class="col-title"><span>列 ${i + 1}</span><div class="col-actions">
+            <button class="ghost" title="左移" data-act="col-left" data-col="${i}">←</button>
+            <button class="ghost" title="右移" data-act="col-right" data-col="${i}">→</button>
+            <button class="ghost danger" title="删除列" data-act="del-col" data-col="${i}">删</button>
+          </div></div>
+          <div class="col-tools">
+            <input class="mini" type="number" min="1" max="120" value="${col.width}" data-act="width" data-col="${i}" title="列宽" />
+            <select class="mini" data-act="align" data-col="${i}" title="对齐方式">
+              <option value="global" ${col.align === 'global' ? 'selected' : ''}>全局对齐</option>
+              <option value="left" ${col.align === 'left' ? 'selected' : ''}>左对齐</option>
+              <option value="center" ${col.align === 'center' ? 'selected' : ''}>居中</option>
+              <option value="right" ${col.align === 'right' ? 'selected' : ''}>右对齐</option>
+            </select>
+          </div>
+        </th>`);
+      });
+      html.push('</tr></thead><tbody>');
+
+      table.rows.forEach((row, rowIndex) => {
+        html.push('<tr>');
+        html.push(`<td class="row-head">
+          <div style="font-weight:700;margin-bottom:8px;">${rowIndex + 1}</div>
+          <div class="row-actions">
+            <button class="ghost" title="上移" data-act="row-up" data-row="${rowIndex}">↑</button>
+            <button class="ghost" title="下移" data-act="row-down" data-row="${rowIndex}">↓</button>
+            <button class="ghost" title="复制行" data-act="dup-row" data-row="${rowIndex}">复制</button>
+            <button class="ghost danger" title="删除行" data-act="del-row" data-row="${rowIndex}">删</button>
+          </div>
         </td>`);
-                });
-                html.push('<td class="hint">列设置</td></tr>');
+        table.columns.forEach((_, colIndex) => {
+          const value = escapeHtml(row[colIndex] ?? '');
+          html.push(`<td><textarea class="cell-text" data-act="cell" data-row="${rowIndex}" data-col="${colIndex}">${value}</textarea></td>`);
+        });
+        html.push('</tr>');
+      });
 
-                table.rows.forEach((row, rowIndex) => {
-                    html.push("<tr>");
-                    table.columns.forEach((_, colIndex) => {
-                        const value = escapeHtml(row[colIndex] ?? "");
-                        html.push(
-                            `<td><textarea class="cell-text" data-act="cell" data-row="${rowIndex}" data-col="${colIndex}">${value}</textarea></td>`,
-                        );
-                    });
-                    html.push(`<td><div class="row-actions">
-          <button data-act="row-up" data-row="${rowIndex}">上移</button>
-          <button data-act="row-down" data-row="${rowIndex}">下移</button>
-          <button data-act="dup-row" data-row="${rowIndex}">复制</button>
-          <button class="danger" data-act="del-row" data-row="${rowIndex}">删行</button>
-        </div></td>`);
-                    html.push("</tr>");
-                });
+      html.push('</tbody></table>');
+      $('tableWrap').innerHTML = html.join('');
+    }
 
-                html.push("</tbody></table>");
-                root.innerHTML = html.join("");
-            }
+    function rerenderAll() {
+      makeTableEditor();
+      renderOutput();
+    }
 
-            function rerenderAll() {
-                makeTableEditor();
-                renderOutput();
-            }
+    function normalizeRows() {
+      state.table.rows.forEach(row => {
+        while (row.length < state.table.columns.length) row.push('');
+        if (row.length > state.table.columns.length) row.length = state.table.columns.length;
+      });
+    }
 
-            function addColumn() {
-                state.table.columns.push({ width: 12, align: "global" });
-                state.table.rows.forEach((row) => row.push(""));
-                rerenderAll();
-            }
+    function addColumn() {
+      state.table.columns.push({ width: 12, align: 'global' });
+      state.table.rows.forEach(row => row.push(''));
+      rerenderAll();
+    }
 
-            function addRow() {
-                state.table.rows.push(
-                    Array(state.table.columns.length).fill(""),
-                );
-                rerenderAll();
-            }
+    function addRow() {
+      state.table.rows.push(Array(state.table.columns.length).fill(''));
+      rerenderAll();
+    }
 
-            function deleteColumn(col) {
-                if (state.table.columns.length <= 1) return;
-                state.table.columns.splice(col, 1);
-                state.table.rows.forEach((row) => row.splice(col, 1));
-                rerenderAll();
-            }
+    function deleteColumn(col) {
+      if (state.table.columns.length <= 1) return;
+      state.table.columns.splice(col, 1);
+      state.table.rows.forEach(row => row.splice(col, 1));
+      rerenderAll();
+    }
 
-            function deleteRow(row) {
-                if (state.table.rows.length <= 1) return;
-                state.table.rows.splice(row, 1);
-                rerenderAll();
-            }
+    function deleteRow(row) {
+      if (state.table.rows.length <= 1) return;
+      state.table.rows.splice(row, 1);
+      rerenderAll();
+    }
 
-            function swapColumns(a, b) {
-                const table = state.table;
-                if (b < 0 || b >= table.columns.length) return;
-                [table.columns[a], table.columns[b]] = [
-                    table.columns[b],
-                    table.columns[a],
-                ];
-                table.rows.forEach(
-                    (row) => ([row[a], row[b]] = [row[b], row[a]]),
-                );
-                rerenderAll();
-            }
+    function swapColumns(a, b) {
+      const table = state.table;
+      if (b < 0 || b >= table.columns.length) return;
+      [table.columns[a], table.columns[b]] = [table.columns[b], table.columns[a]];
+      table.rows.forEach(row => [row[a], row[b]] = [row[b], row[a]]);
+      rerenderAll();
+    }
 
-            function swapRows(a, b) {
-                const table = state.table;
-                if (b < 0 || b >= table.rows.length) return;
-                [table.rows[a], table.rows[b]] = [table.rows[b], table.rows[a]];
-                rerenderAll();
-            }
+    function swapRows(a, b) {
+      const table = state.table;
+      if (b < 0 || b >= table.rows.length) return;
+      [table.rows[a], table.rows[b]] = [table.rows[b], table.rows[a]];
+      rerenderAll();
+    }
 
-            document.addEventListener("input", (e) => {
-                const t = e.target;
-                const act = t.dataset.act;
-                if (!act) {
-                    renderOutput();
-                    return;
-                }
-                const row = Number(t.dataset.row);
-                const col = Number(t.dataset.col);
-                if (act === "cell") state.table.rows[row][col] = t.value;
-                if (act === "width")
-                    state.table.columns[col].width = Number(t.value || 1);
-                if (act === "align") state.table.columns[col].align = t.value;
-                renderOutput();
-            });
+    function applySize() {
+      const rows = Math.max(1, Math.min(80, Number($('rowCount').value || 1)));
+      const cols = Math.max(1, Math.min(40, Number($('colCount').value || 1)));
 
-            document.addEventListener("change", (e) => {
-                const t = e.target;
-                const act = t.dataset.act;
-                if (act === "align") {
-                    state.table.columns[Number(t.dataset.col)].align = t.value;
-                }
-                renderOutput();
-            });
+      while (state.table.columns.length < cols) state.table.columns.push({ width: 12, align: 'global' });
+      if (state.table.columns.length > cols) state.table.columns.length = cols;
 
-            document.addEventListener("click", (e) => {
-                const btn = e.target.closest("button");
-                if (!btn) return;
-                const act = btn.dataset.act;
-                if (!act) return;
-                const row = Number(btn.dataset.row);
-                const col = Number(btn.dataset.col);
-                if (act === "del-col") deleteColumn(col);
-                if (act === "col-left") swapColumns(col, col - 1);
-                if (act === "col-right") swapColumns(col, col + 1);
-                if (act === "del-row") deleteRow(row);
-                if (act === "row-up") swapRows(row, row - 1);
-                if (act === "row-down") swapRows(row, row + 1);
-                if (act === "dup-row") {
-                    state.table.rows.splice(row + 1, 0, [
-                        ...state.table.rows[row],
-                    ]);
-                    rerenderAll();
-                }
-            });
+      while (state.table.rows.length < rows) state.table.rows.push(Array(state.table.columns.length).fill(''));
+      if (state.table.rows.length > rows) state.table.rows.length = rows;
 
-            $("btnAddCol").onclick = addColumn;
-            $("btnAddRow").onclick = addRow;
+      normalizeRows();
+      rerenderAll();
+    }
 
-            $("btnClear").onclick = () => {
-                state.table = {
-                    columns: [{ width: 12, align: "global" }],
-                    rows: [[""]],
-                };
-                rerenderAll();
-            };
+    document.addEventListener('input', (e) => {
+      const t = e.target;
+      const act = t.dataset.act;
+      if (!act) {
+        renderOutput();
+        return;
+      }
+      const row = Number(t.dataset.row);
+      const col = Number(t.dataset.col);
+      if (act === 'cell') state.table.rows[row][col] = t.value;
+      if (act === 'width') state.table.columns[col].width = Number(t.value || 1);
+      if (act === 'align') state.table.columns[col].align = t.value;
+      renderOutput();
+    });
 
-            $("btnPresetRecord").onclick = () => {
-                $("commentStyle").value = "block";
-                $("globalAlign").value = "center";
-                $("borderStyle").value = "ascii";
-                $("indentSize").value = 4;
-                $("cellPadding").value = 1;
-                $("widthMode").value = "manual";
-                state.table = {
-                    columns: [
-                        { width: 20, align: "center" },
-                        { width: 7, align: "center" },
-                        { width: 15, align: "center" },
-                        { width: 8, align: "center" },
-                        { width: 15, align: "center" },
-                    ],
-                    rows: [
-                        [
-                            "1bytes",
-                            "4bytes",
-                            "key len bytes",
-                            "4bytes",
-                            "value len bytes",
-                        ],
-                        [
-                            "type(0:del, 1:val)",
-                            "key len",
-                            "key data",
-                            "value len",
-                            "value data",
-                        ],
-                    ],
-                };
-                rerenderAll();
-            };
+    document.addEventListener('change', (e) => {
+      const t = e.target;
+      const act = t.dataset.act;
+      if (act === 'align') state.table.columns[Number(t.dataset.col)].align = t.value;
+      renderOutput();
+    });
 
-            $("btnCopy").onclick = async () => {
-                const text = $("preview").textContent;
-                try {
-                    await navigator.clipboard.writeText(text);
-                    $("btnCopy").textContent = "已复制";
-                    setTimeout(
-                        () => ($("btnCopy").textContent = "复制结果"),
-                        1200,
-                    );
-                } catch {
-                    const range = document.createRange();
-                    range.selectNodeContents($("preview"));
-                    const sel = window.getSelection();
-                    sel.removeAllRanges();
-                    sel.addRange(range);
-                }
-            };
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      const act = btn.dataset.act;
+      if (!act) return;
+      const row = Number(btn.dataset.row);
+      const col = Number(btn.dataset.col);
+      if (act === 'del-col') deleteColumn(col);
+      if (act === 'col-left') swapColumns(col, col - 1);
+      if (act === 'col-right') swapColumns(col, col + 1);
+      if (act === 'del-row') deleteRow(row);
+      if (act === 'row-up') swapRows(row, row - 1);
+      if (act === 'row-down') swapRows(row, row + 1);
+      if (act === 'dup-row') {
+        state.table.rows.splice(row + 1, 0, [...state.table.rows[row]]);
+        rerenderAll();
+      }
+    });
 
-            $("btnDownload").onclick = () => {
-                const blob = new Blob([$("preview").textContent], {
-                    type: "text/plain;charset=utf-8",
-                });
-                const a = document.createElement("a");
-                a.href = URL.createObjectURL(blob);
-                a.download = "ascii-comment-table.txt";
-                a.click();
-                URL.revokeObjectURL(a.href);
-            };
+    $('btnAddCol').onclick = addColumn;
+    $('btnAddRow').onclick = addRow;
+    $('btnDelLastRow').onclick = () => deleteRow(state.table.rows.length - 1);
+    $('btnDelLastCol').onclick = () => deleteColumn(state.table.columns.length - 1);
+    $('btnApplySize').onclick = applySize;
 
-            [
-                "commentStyle",
-                "globalAlign",
-                "borderStyle",
-                "indentSize",
-                "cellPadding",
-                "widthMode",
-            ].forEach((id) => $(id).addEventListener("input", renderOutput));
-            ["commentStyle", "globalAlign", "borderStyle", "widthMode"].forEach(
-                (id) => $(id).addEventListener("change", renderOutput),
-            );
+    $('btnClear').onclick = () => {
+      state.table = { columns: [{ width: 12, align: 'global' }], rows: [['']] };
+      rerenderAll();
+    };
 
-            rerenderAll();
-        </script>
-    </body>
+    $('btnPresetRecord').onclick = () => {
+      $('commentStyle').value = 'block';
+      $('globalAlign').value = 'center';
+      $('borderStyle').value = 'ascii';
+      $('indentSize').value = 4;
+      $('cellPadding').value = 1;
+      $('widthMode').value = 'manual';
+      state.table = {
+        columns: [
+          { width: 20, align: 'center' },
+          { width: 7, align: 'center' },
+          { width: 15, align: 'center' },
+          { width: 8, align: 'center' },
+          { width: 15, align: 'center' }
+        ],
+        rows: [
+          ['1bytes', '4bytes', 'key len bytes', '4bytes', 'value len bytes'],
+          ['type(0:del, 1:val)', 'key len', 'key data', 'value len', 'value data']
+        ]
+      };
+      rerenderAll();
+    };
+
+    $('btnCopy').onclick = async () => {
+      const text = $('preview').textContent;
+      try {
+        await navigator.clipboard.writeText(text);
+        $('btnCopy').textContent = '已复制';
+        setTimeout(() => $('btnCopy').textContent = '复制结果', 1200);
+      } catch {
+        const range = document.createRange();
+        range.selectNodeContents($('preview'));
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    };
+
+    $('btnDownload').onclick = () => {
+      const blob = new Blob([$('preview').textContent], { type: 'text/plain;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'ascii-comment-table.txt';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    };
+
+    ['commentStyle', 'globalAlign', 'borderStyle', 'indentSize', 'cellPadding', 'widthMode']
+      .forEach(id => $(id).addEventListener('input', renderOutput));
+    ['commentStyle', 'globalAlign', 'borderStyle', 'widthMode']
+      .forEach(id => $(id).addEventListener('change', renderOutput));
+
+    rerenderAll();
+  </script>
+</body>
 </html>
