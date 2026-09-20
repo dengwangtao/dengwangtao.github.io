@@ -1,0 +1,15 @@
+{
+  "title": "Deng Wangtao · 页面目录",
+  "heading": "探索这个站点",
+  "description": "这里汇集了个人主页、在线工具、学习资料以及后续新增的独立页面。",
+  "repositoryUrl": "https://github.com/dengwangtao/dengwangtao.github.io",
+  "exclude": [
+    "index.html",
+    "404.html"
+  ],
+  "pinned": [
+    "about.html",
+    "cell.html",
+    "ielts.html"
+  ]
+}

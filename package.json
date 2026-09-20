@@ -1,0 +1,10 @@
+{
+  "name": "dengwangtao-github-io",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "node scripts/generate-directory.mjs",
+    "build": "node scripts/generate-directory.mjs --output _site",
+    "check": "node scripts/check-directory.mjs"
+  }
+}
