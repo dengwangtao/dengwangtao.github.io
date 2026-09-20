@@ -49,4 +49,6 @@ npm run check
 
 目录标题、说明、排除文件及置顶顺序可以在 `directory.config.json` 中调整。
 
+完整配置方法请查看 [`DIRECTORY_CONFIG.md`](DIRECTORY_CONFIG.md)。
+
 首次使用 Actions 部署时，在仓库的 **Settings → Pages → Build and deployment → Source** 中选择 **GitHub Actions**。
