@@ -330,6 +330,10 @@ function renderFolder(folder, depth) {
   const pageCards = folder.pages.map(renderPageCard).join("\n");
   const childFolders = [...folder.folders.values()].map(child => renderFolder(child, depth + 1)).join("\n");
   const folderPath = `${folder.segments.join("/")}/`;
+  const folderBody = [
+    pageCards ? `<div class="page-grid">${pageCards}</div>` : "",
+    childFolders
+  ].filter(Boolean).join("\n");
 
   return `<details class="folder" data-folder${depth === 0 ? " open" : ""}>
   <summary class="folder-summary">
@@ -339,8 +343,7 @@ function renderFolder(folder, depth) {
     <span class="folder-chevron">${icon("chevron", 17)}</span>
   </summary>
   <div class="folder-content">
-    ${pageCards ? `<div class="page-grid">${pageCards}</div>` : ""}
-    ${childFolders}
+${folderBody}
   </div>
 </details>`;
 }

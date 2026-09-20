@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JSON 格式化与校验工具</title>
+  <meta name="description" content="在浏览器中格式化、压缩、校验和下载 JSON 数据，所有内容仅在本地处理。" />
+  <meta name="directory-order" content="10" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --background: #07111f;
+      --panel: rgba(15, 31, 52, 0.9);
+      --panel-soft: rgba(17, 38, 63, 0.72);
+      --border: rgba(148, 184, 224, 0.18);
+      --text: #f4f8ff;
+      --muted: #96aac3;
+      --accent: #67e8f9;
+      --accent-strong: #22d3ee;
+      --success: #4ade80;
+      --danger: #fb7185;
+      --warning: #fbbf24;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(34, 211, 238, 0.18), transparent 30rem),
+        radial-gradient(circle at 90% 10%, rgba(139, 92, 246, 0.18), transparent 34rem),
+        linear-gradient(150deg, #050b14, var(--background));
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+    }
+
+    button, textarea, select { font: inherit; }
+
+    .shell {
+      width: min(1280px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 28px 0 40px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    .back-link:hover { color: var(--accent); }
+
+    .privacy-badge {
+      padding: 8px 12px;
+      border: 1px solid rgba(74, 222, 128, 0.25);
+      border-radius: 999px;
+      color: #bbf7d0;
+      background: rgba(74, 222, 128, 0.08);
+      font-size: 12px;
+    }
+
+    header { margin-bottom: 26px; }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(34px, 6vw, 62px);
+      line-height: 1;
+      letter-spacing: -0.055em;
+    }
+
+    header p {
+      max-width: 720px;
+      margin: 16px 0 0;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: rgba(7, 17, 31, 0.76);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    button, select {
+      min-height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    button {
+      padding: 0 14px;
+      cursor: pointer;
+      transition: 150ms ease;
+    }
+
+    button:hover {
+      border-color: rgba(103, 232, 249, 0.5);
+      transform: translateY(-1px);
+    }
+
+    button.primary {
+      border-color: transparent;
+      color: #05202a;
+      background: linear-gradient(135deg, var(--accent), #93c5fd);
+      font-weight: 800;
+    }
+
+    select { padding: 0 34px 0 12px; }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      min-height: 560px;
+    }
+
+    .editor {
+      display: flex;
+      min-width: 0;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .editor-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 52px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel-soft);
+    }
+
+    .editor-title { font-size: 13px; font-weight: 800; }
+    .editor-meta { color: var(--muted); font-size: 12px; }
+
+    textarea, pre {
+      width: 100%;
+      min-height: 500px;
+      margin: 0;
+      padding: 18px;
+      border: 0;
+      outline: 0;
+      color: #dcecff;
+      background: transparent;
+      font: 14px/1.65 "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+      tab-size: 2;
+    }
+
+    textarea { resize: vertical; }
+
+    textarea::placeholder { color: #60758f; }
+
+    pre {
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .placeholder { color: #60758f; }
+    .json-key { color: #7dd3fc; }
+    .json-string { color: #86efac; }
+    .json-number { color: #fcd34d; }
+    .json-boolean { color: #c4b5fd; }
+    .json-null { color: #fda4af; }
+
+    .status {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 14px;
+      padding: 13px 16px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      color: var(--muted);
+      background: rgba(7, 17, 31, 0.72);
+      font-size: 13px;
+    }
+
+    .status-message.success { color: var(--success); }
+    .status-message.error { color: var(--danger); }
+    .statistics { display: flex; flex-wrap: wrap; gap: 14px; }
+
+    @media (max-width: 850px) {
+      .workspace { grid-template-columns: 1fr; }
+      textarea, pre { min-height: 360px; }
+    }
+
+    @media (max-width: 560px) {
+      .shell { width: min(100% - 18px, 1280px); padding-top: 18px; }
+      .privacy-badge { display: none; }
+      .toolbar button { flex: 1 1 calc(50% - 10px); }
+      .toolbar select { flex: 1 1 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <nav class="topbar">
+      <a class="back-link" href="../index.html">← 返回工具目录</a>
+      <span class="privacy-badge">本地处理 · 不上传数据</span>
+    </nav>
+
+    <header>
+      <h1>JSON 格式化与校验</h1>
+      <p>粘贴 JSON 后进行格式化、压缩或语法检查。处理过程完全在当前浏览器中完成。</p>
+    </header>
+
+    <section class="toolbar" aria-label="JSON 操作">
+      <button class="primary" id="format-button" type="button">格式化</button>
+      <button id="minify-button" type="button">压缩</button>
+      <button id="validate-button" type="button">仅校验</button>
+      <button id="copy-button" type="button">复制结果</button>
+      <button id="download-button" type="button">下载 JSON</button>
+      <button id="sample-button" type="button">载入示例</button>
+      <button id="clear-button" type="button">清空</button>
+      <select id="indent-select" aria-label="缩进空格数">
+        <option value="2">缩进 2 空格</option>
+        <option value="4">缩进 4 空格</option>
+        <option value="tab">使用 Tab</option>
+      </select>
+    </section>
+
+    <section class="workspace">
+      <article class="editor">
+        <div class="editor-header">
+          <span class="editor-title">输入</span>
+          <span class="editor-meta" id="input-size">0 字符</span>
+        </div>
+        <textarea id="json-input" spellcheck="false" placeholder='例如：{"name":"Deng Wangtao","tools":["JSON","ASCII"]}'></textarea>
+      </article>
+
+      <article class="editor">
+        <div class="editor-header">
+          <span class="editor-title">结果</span>
+          <span class="editor-meta" id="output-size">0 字符</span>
+        </div>
+        <pre id="json-output"><span class="placeholder">格式化结果会显示在这里。</span></pre>
+      </article>
+    </section>
+
+    <section class="status" aria-live="polite">
+      <span class="status-message" id="status-message">等待输入 JSON 数据</span>
+      <span class="statistics" id="statistics"></span>
+    </section>
+  </main>
+
+  <script>
+    const input = document.querySelector("#json-input");
+    const output = document.querySelector("#json-output");
+    const statusMessage = document.querySelector("#status-message");
+    const statistics = document.querySelector("#statistics");
+    const inputSize = document.querySelector("#input-size");
+    const outputSize = document.querySelector("#output-size");
+    const indentSelect = document.querySelector("#indent-select");
+    let outputText = "";
+
+    const sampleData = {
+      name: "JSON 格式化工具",
+      features: ["格式化", "压缩", "校验", "复制", "下载"],
+      settings: { theme: "dark", localOnly: true },
+      version: 1
+    };
+
+    function parseInput() {
+      const source = input.value.trim();
+      if (!source) throw new Error("请输入需要处理的 JSON 数据。");
+      return JSON.parse(source);
+    }
+
+    function selectedIndent() {
+      return indentSelect.value === "tab" ? "\t" : Number(indentSelect.value);
+    }
+
+    function renderResult(value, message) {
+      outputText = value;
+      output.innerHTML = syntaxHighlight(value);
+      outputSize.textContent = `${value.length.toLocaleString()} 字符`;
+      showSuccess(message);
+    }
+
+    function runOperation(operation) {
+      try {
+        const parsed = parseInput();
+        if (operation === "format") renderResult(JSON.stringify(parsed, null, selectedIndent()), "JSON 格式化成功");
+        if (operation === "minify") renderResult(JSON.stringify(parsed), "JSON 压缩成功");
+        if (operation === "validate") {
+          showSuccess("JSON 语法有效");
+          updateStatistics(parsed);
+        } else {
+          updateStatistics(parsed);
+        }
+      } catch (error) {
+        outputText = "";
+        output.textContent = error.message;
+        outputSize.textContent = "0 字符";
+        statistics.textContent = "";
+        statusMessage.className = "status-message error";
+        statusMessage.textContent = `校验失败：${error.message}`;
+      }
+    }
+
+    function updateStatistics(value) {
+      const summary = inspectValue(value);
+      statistics.innerHTML = [
+        `<span>节点 ${summary.nodes.toLocaleString()}</span>`,
+        `<span>最大深度 ${summary.depth}</span>`,
+        `<span>${Array.isArray(value) ? "数组" : typeof value === "object" && value !== null ? "对象" : "基础类型"}</span>`
+      ].join("");
+    }
+
+    function inspectValue(value, depth = 0) {
+      if (value === null || typeof value !== "object") return { nodes: 1, depth };
+      let nodes = 1;
+      let maximumDepth = depth;
+      for (const child of Object.values(value)) {
+        const childSummary = inspectValue(child, depth + 1);
+        nodes += childSummary.nodes;
+        maximumDepth = Math.max(maximumDepth, childSummary.depth);
+      }
+      return { nodes, depth: maximumDepth };
+    }
+
+    function syntaxHighlight(value) {
+      const escaped = value
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+
+      return escaped.replace(
+        /("(?:\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*"\s*:?)|\b(true|false|null)\b|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/g,
+        token => {
+          let className = "json-number";
+          if (token.startsWith('"')) className = token.endsWith(":") ? "json-key" : "json-string";
+          if (token === "true" || token === "false") className = "json-boolean";
+          if (token === "null") className = "json-null";
+          return `<span class="${className}">${token}</span>`;
+        }
+      );
+    }
+
+    function showSuccess(message) {
+      statusMessage.className = "status-message success";
+      statusMessage.textContent = message;
+    }
+
+    async function copyResult() {
+      if (!outputText) return showTemporaryError("请先格式化或压缩 JSON。");
+      try {
+        await navigator.clipboard.writeText(outputText);
+        showSuccess("结果已复制到剪贴板");
+      } catch {
+        showTemporaryError("浏览器未允许访问剪贴板，请手动复制结果。");
+      }
+    }
+
+    function downloadResult() {
+      if (!outputText) return showTemporaryError("请先生成可下载的 JSON。");
+      const downloadUrl = URL.createObjectURL(new Blob([outputText], { type: "application/json" }));
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = "formatted.json";
+      link.click();
+      URL.revokeObjectURL(downloadUrl);
+      showSuccess("JSON 文件已生成");
+    }
+
+    function showTemporaryError(message) {
+      statusMessage.className = "status-message error";
+      statusMessage.textContent = message;
+    }
+
+    input.addEventListener("input", () => {
+      inputSize.textContent = `${input.value.length.toLocaleString()} 字符`;
+    });
+    document.querySelector("#format-button").addEventListener("click", () => runOperation("format"));
+    document.querySelector("#minify-button").addEventListener("click", () => runOperation("minify"));
+    document.querySelector("#validate-button").addEventListener("click", () => runOperation("validate"));
+    document.querySelector("#copy-button").addEventListener("click", copyResult);
+    document.querySelector("#download-button").addEventListener("click", downloadResult);
+    document.querySelector("#sample-button").addEventListener("click", () => {
+      input.value = JSON.stringify(sampleData, null, 2);
+      input.dispatchEvent(new Event("input"));
+      runOperation("format");
+    });
+    document.querySelector("#clear-button").addEventListener("click", () => {
+      input.value = "";
+      outputText = "";
+      output.innerHTML = '<span class="placeholder">格式化结果会显示在这里。</span>';
+      inputSize.textContent = "0 字符";
+      outputSize.textContent = "0 字符";
+      statistics.textContent = "";
+      statusMessage.className = "status-message";
+      statusMessage.textContent = "等待输入 JSON 数据";
+      input.focus();
+    });
+  </script>
+</body>
+</html>
