@@ -113,6 +113,7 @@ hidden: false
 | `order` | 同一文件夹中的排列顺序，数值越小越靠前。 |
 | `hidden` | 设置为 `true` 时不显示在目录中，但仍会生成 HTML。 |
 | `directory-title` | 只覆盖目录卡片标题。 |
+| `toc` | 是否生成文章目录，默认为 `true`；设为 `false` 可关闭。 |
 
 例如 `notes/javascript/basic.md` 会生成 `_site/notes/javascript/basic.html`。Markdown 中指向其他 `.md` 文件的链接也会自动改写为 `.html`。
 
@@ -127,6 +128,19 @@ int main() {
 }
 ```
 ````
+
+### 文章目录
+
+Markdown 中的二级、三级和四级标题会自动生成右侧文章目录。目录在桌面端跟随页面滚动，并支持点击跳转、当前位置高亮和手动折叠；折叠状态会保存在浏览器中。
+
+不需要目录时，在 front matter 中设置：
+
+```markdown
+---
+title: 简短说明
+toc: false
+---
+```
 
 ### Mermaid 图表
 

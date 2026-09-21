@@ -47,6 +47,86 @@ body::before {
   padding: 28px 0 46px;
 }
 
+.article-shell-with-toc {
+  width: min(1240px, calc(100% - 30px));
+}
+
+.article-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 900px) minmax(220px, 270px);
+  gap: 28px;
+  align-items: start;
+  justify-content: space-between;
+}
+
+.article-column { min-width: 0; }
+
+.article-toc {
+  position: sticky;
+  top: 20px;
+  max-height: calc(100vh - 40px);
+  padding: 16px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(9, 22, 38, 0.9);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(16px);
+}
+
+.article-toc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--heading);
+  font-size: 14px;
+}
+
+.article-toc-toggle {
+  padding: 5px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.04);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.article-toc-toggle:hover {
+  color: var(--accent);
+  border-color: rgba(103, 232, 249, 0.4);
+}
+
+.article-toc-list {
+  display: grid;
+  gap: 3px;
+  margin-top: 12px;
+}
+
+.article-toc-link {
+  padding: 6px 8px;
+  border-left: 2px solid transparent;
+  border-radius: 0 7px 7px 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+  text-decoration: none;
+  transition: 140ms ease;
+}
+
+.article-toc-link:hover,
+.article-toc-link.is-active {
+  border-left-color: var(--accent);
+  color: var(--accent);
+  background: rgba(103, 232, 249, 0.07);
+}
+
+.article-toc-level-3 { padding-left: 20px; }
+.article-toc-level-4 { padding-left: 32px; }
+.article-toc.is-collapsed .article-toc-list { display: none; }
+
 .article-nav {
   display: flex;
   align-items: center;
@@ -366,10 +446,19 @@ body::before {
   .article-footer { flex-direction: column; }
 }
 
+@media (max-width: 1050px) {
+  .article-layout { grid-template-columns: minmax(0, 1fr); }
+  .article-toc {
+    position: static;
+    order: -1;
+    max-height: none;
+  }
+}
+
 @media print {
   :root { color-scheme: light; }
   body { color: #111827; background: #ffffff; }
-  body::before, .article-nav, .source-badge, .article-footer { display: none; }
+  body::before, .article-nav, .source-badge, .article-footer, .article-toc { display: none; }
   .article-shell { width: 100%; padding: 0; }
   .article-header h1 { color: #111827; background: none; }
   .article-header p { color: #4b5563; }

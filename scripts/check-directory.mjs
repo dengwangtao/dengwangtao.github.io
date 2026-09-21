@@ -68,6 +68,14 @@ for (const page of sourcePages) {
     if (hasHighlightedCode) {
       assert(renderedMarkdown.includes('class="hljs language-'), `代码块未正确高亮：${page}`);
     }
+
+    const tocDisabled = /^---\s*$[\s\S]*?^toc:\s*false\s*$[\s\S]*?^---\s*$/im.test(source);
+    const hasTocHeadings = /^#{2,4}\s+\S/m.test(source);
+    if (hasTocHeadings && !tocDisabled) {
+      assert(renderedMarkdown.includes('class="article-toc"'), `Markdown 页面缺少文章目录：${page}`);
+      assert(renderedMarkdown.includes("assets/toc.js"), `文章目录缺少交互脚本：${page}`);
+      assert(/<h[2-4] id="[^"]+">/.test(renderedMarkdown), `Markdown 标题缺少跳转锚点：${page}`);
+    }
   }
 }
 
@@ -87,6 +95,7 @@ for (const unpublishedPath of ["scripts", ".github", "package.json", "directory.
 
 await fs.access(path.join(buildDirectory, "assets", "markdown.css"));
 await fs.access(path.join(buildDirectory, "assets", "mermaid.js"));
+await fs.access(path.join(buildDirectory, "assets", "toc.js"));
 
 console.log(`目录校验通过：${listedPages.length} 个页面已收录，${sourcePages.length} 个内容文件已发布。`);
 

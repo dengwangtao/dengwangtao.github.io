@@ -74,6 +74,21 @@ markdownRenderer.renderer.rules.fence = (tokens, index, options, environment, re
   return defaultFenceRenderer(tokens, index, options, environment, renderer);
 };
 
+markdownRenderer.renderer.rules.heading_open = (tokens, index, options, environment, renderer) => {
+  const token = tokens[index];
+  const level = Number(token.tag.slice(1));
+  const headingToken = tokens[index + 1];
+
+  if (level >= 2 && level <= 4 && Array.isArray(environment?.headings)) {
+    const title = extractInlineText(headingToken);
+    const id = createHeadingId(title, environment.headingIds);
+    token.attrSet("id", id);
+    environment.headings.push({ id, level, title });
+  }
+
+  return renderer.renderToken(tokens, index, options);
+};
+
 const outputFlagIndex = process.argv.indexOf("--output");
 const outputArgument = outputFlagIndex === -1 ? null : process.argv[outputFlagIndex + 1];
 
@@ -121,6 +136,7 @@ for (const relativePath of contentFiles) {
     pinnedOrder: pinnedPages.get(normalizedPath) ?? Number.MAX_SAFE_INTEGER,
     kind: isMarkdown ? "guide" : detectPageKind(metadata.title, normalizedPath),
     sourceType: isMarkdown ? "markdown" : "html",
+    showToc: isMarkdown ? metadata.toc : false,
     markdownBody: markdownDocument?.body ?? ""
   };
 
@@ -268,6 +284,7 @@ function readMarkdownDocument(source) {
       hidden: String(
         frontMatter.hidden ?? frontMatter["directory-hidden"] ?? false
       ).toLowerCase() === "true",
+      toc: String(frontMatter.toc ?? true).toLowerCase() !== "false",
       order: Number.isFinite(Number(orderValue)) ? Number(orderValue) : Number.MAX_SAFE_INTEGER
     },
     body
@@ -400,9 +417,16 @@ function renderMarkdownDocument(page, siteConfig) {
   const directoryDepth = page.outputPath.split("/").length - 1;
   const rootPrefix = directoryDepth ? "../".repeat(directoryDepth) : "./";
   const articleSource = page.markdownBody.replace(/^\s*#\s+.+?(?:\n+|$)/, "");
-  const articleHtml = markdownRenderer.render(articleSource);
+  const renderEnvironment = { headings: [], headingIds: new Map() };
+  const articleHtml = markdownRenderer.render(articleSource, renderEnvironment);
+  const tableOfContents = page.showToc
+    ? renderTableOfContents(renderEnvironment.headings)
+    : "";
   const mermaidScript = articleHtml.includes('class="mermaid"')
     ? `  <script type="module" src="${rootPrefix}assets/mermaid.js"></script>\n`
+    : "";
+  const tocScript = tableOfContents
+    ? `  <script src="${rootPrefix}assets/toc.js" defer></script>\n`
     : "";
 
   return `<!DOCTYPE html>
@@ -416,7 +440,7 @@ function renderMarkdownDocument(page, siteConfig) {
   <link rel="stylesheet" href="${rootPrefix}assets/markdown.css" />
 </head>
 <body>
-  <main class="article-shell">
+  <main class="article-shell${tableOfContents ? " article-shell-with-toc" : ""}">
     <nav class="article-nav" aria-label="文章导航">
       <a class="back-link" href="${rootPrefix}index.html">${icon("arrowBack", 17)} 返回页面目录</a>
       <a class="repository-link" href="${escapeAttribute(siteConfig.repositoryUrl)}" target="_blank" rel="noreferrer">${icon("github", 17)} 查看源码</a>
@@ -426,17 +450,57 @@ function renderMarkdownDocument(page, siteConfig) {
       <h1>${escapeHtml(page.title)}</h1>
       ${page.description ? `<p>${escapeHtml(page.description)}</p>` : ""}
     </header>
-    <article class="markdown-body">
+    <div class="article-layout">
+      <div class="article-column">
+        <article class="markdown-body">
 ${articleHtml}
-    </article>
-    <footer class="article-footer">
-      <span>由 Markdown 自动生成</span>
-      <code>${escapeHtml(page.relativePath)}</code>
-    </footer>
+        </article>
+        <footer class="article-footer">
+          <span>由 Markdown 自动生成</span>
+          <code>${escapeHtml(page.relativePath)}</code>
+        </footer>
+      </div>
+${tableOfContents}
+    </div>
   </main>
-${mermaidScript}</body>
+${mermaidScript}${tocScript}</body>
 </html>
 `;
+}
+
+function extractInlineText(token) {
+  return (token?.children ?? [])
+    .map(child => child.type === "softbreak" ? " " : child.content)
+    .join("")
+    .trim();
+}
+
+function createHeadingId(title, headingIds) {
+  const base = title
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/["'`<>]/g, "")
+    .replace(/[^\p{Letter}\p{Number}_-]+/gu, "-")
+    .replace(/^-+|-+$/g, "") || "section";
+  const count = (headingIds.get(base) ?? 0) + 1;
+  headingIds.set(base, count);
+  return count === 1 ? base : `${base}-${count}`;
+}
+
+function renderTableOfContents(headings) {
+  if (headings.length === 0) return "";
+
+  const links = headings.map(heading => `        <a class="article-toc-link article-toc-level-${heading.level}" href="#${escapeAttribute(heading.id)}" data-toc-link>${escapeHtml(heading.title)}</a>`).join("\n");
+
+  return `      <aside class="article-toc" data-article-toc>
+        <div class="article-toc-header">
+          <strong>本文目录</strong>
+          <button class="article-toc-toggle" type="button" aria-expanded="true" aria-controls="article-toc-list" data-toc-toggle>隐藏</button>
+        </div>
+        <nav class="article-toc-list" id="article-toc-list" aria-label="本文目录">
+${links}
+        </nav>
+      </aside>`;
 }
 
 function renderDocument({ config, tree, pages: allPages, folderCount }) {
