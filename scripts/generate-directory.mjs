@@ -2,6 +2,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import MarkdownIt from "markdown-it";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(scriptDirectory, "..");
@@ -10,7 +11,9 @@ const ignoredTopLevelEntries = new Set([
   ".github",
   ".codegraph",
   "_site",
+  "DIRECTORY_CONFIG.md",
   "node_modules",
+  "README.md",
   "scripts"
 ]);
 const unpublishedTopLevelEntries = new Set([
@@ -19,8 +22,35 @@ const unpublishedTopLevelEntries = new Set([
   "directory.config.json",
   "package-lock.json",
   "package.json",
-  "README.md"
+  "README.md",
+  "DIRECTORY_CONFIG.md"
 ]);
+const markdownRenderer = new MarkdownIt({
+  html: false,
+  linkify: true,
+  typographer: true
+});
+const defaultLinkRenderer = markdownRenderer.renderer.rules.link_open
+  ?? ((tokens, index, options, environment, renderer) => renderer.renderToken(tokens, index, options));
+
+markdownRenderer.renderer.rules.link_open = (tokens, index, options, environment, renderer) => {
+  const token = tokens[index];
+  const hrefIndex = token.attrIndex("href");
+
+  if (hrefIndex >= 0) {
+    const href = token.attrs[hrefIndex][1];
+    if (!/^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i.test(href)) {
+      token.attrs[hrefIndex][1] = href.replace(/\.md(?=([?#]|$))/i, ".html");
+    }
+
+    if (/^https?:\/\//i.test(href)) {
+      token.attrSet("target", "_blank");
+      token.attrSet("rel", "noreferrer");
+    }
+  }
+
+  return defaultLinkRenderer(tokens, index, options, environment, renderer);
+};
 
 const outputFlagIndex = process.argv.indexOf("--output");
 const outputArgument = outputFlagIndex === -1 ? null : process.argv[outputFlagIndex + 1];
@@ -40,31 +70,40 @@ const pinnedPages = new Map(
   (config.pinned ?? []).map((pagePath, index) => [normalizePath(pagePath), index])
 );
 
-const htmlFiles = await collectHtmlFiles(projectRoot, "");
+const contentFiles = await collectContentFiles(projectRoot, "");
 const pages = [];
+const markdownPages = [];
 
-for (const relativePath of htmlFiles) {
+for (const relativePath of contentFiles) {
   const normalizedPath = normalizePath(relativePath);
-  if (excludedPages.has(normalizedPath)) continue;
-
   const source = await fs.readFile(path.join(projectRoot, relativePath), "utf8");
-  const metadata = readMetadata(source);
-  if (metadata.hidden) continue;
+  const isMarkdown = /\.md$/i.test(normalizedPath);
+  const markdownDocument = isMarkdown ? readMarkdownDocument(source) : null;
+  const metadata = markdownDocument?.metadata ?? readHtmlMetadata(source);
 
   const pathSegments = normalizedPath.split("/");
   const fileName = pathSegments.at(-1);
-  const fallbackTitle = humanize(fileName.replace(/\.html?$/i, ""));
-
-  pages.push({
-    title: metadata.directoryTitle || metadata.title || fallbackTitle,
+  const fallbackTitle = humanize(fileName.replace(/\.(?:html?|md)$/i, ""));
+  const title = metadata.directoryTitle || metadata.title || fallbackTitle;
+  const outputPath = isMarkdown
+    ? normalizedPath.replace(/\.md$/i, ".html")
+    : normalizedPath;
+  const page = {
+    title,
     description: metadata.description || `打开 ${fallbackTitle}`,
     relativePath: normalizedPath,
-    href: toPublicHref(normalizedPath),
+    outputPath,
+    href: toPublicHref(outputPath),
     folderSegments: pathSegments.slice(0, -1),
     order: metadata.order,
     pinnedOrder: pinnedPages.get(normalizedPath) ?? Number.MAX_SAFE_INTEGER,
-    kind: detectPageKind(metadata.title, normalizedPath)
-  });
+    kind: isMarkdown ? "guide" : detectPageKind(metadata.title, normalizedPath),
+    sourceType: isMarkdown ? "markdown" : "html",
+    markdownBody: markdownDocument?.body ?? ""
+  };
+
+  if (isMarkdown) markdownPages.push(page);
+  if (!excludedPages.has(normalizedPath) && !metadata.hidden) pages.push(page);
 }
 
 pages.sort(comparePages);
@@ -80,6 +119,7 @@ const targetDirectory = outputDirectory ?? projectRoot;
 if (outputDirectory) {
   await prepareOutputDirectory(outputDirectory);
   await copyPublishedFiles(projectRoot, outputDirectory, "");
+  await renderMarkdownPages(markdownPages, outputDirectory, config);
 }
 
 await fs.writeFile(path.join(targetDirectory, "index.html"), generatedHtml, "utf8");
@@ -90,7 +130,7 @@ if (outputDirectory) {
   console.log(`已生成首页：${pages.length} 个页面、${folderCount} 个目录。`);
 }
 
-async function collectHtmlFiles(currentDirectory, relativeDirectory) {
+async function collectContentFiles(currentDirectory, relativeDirectory) {
   if (outputDirectory && path.resolve(currentDirectory) === outputDirectory) return [];
 
   const entries = await fs.readdir(currentDirectory, { withFileTypes: true });
@@ -104,8 +144,8 @@ async function collectHtmlFiles(currentDirectory, relativeDirectory) {
     const absolutePath = path.join(currentDirectory, entry.name);
 
     if (entry.isDirectory()) {
-      results.push(...await collectHtmlFiles(absolutePath, relativePath));
-    } else if (entry.isFile() && /\.html?$/i.test(entry.name)) {
+      results.push(...await collectContentFiles(absolutePath, relativePath));
+    } else if (entry.isFile() && /\.(?:html?|md)$/i.test(entry.name)) {
       results.push(relativePath);
     }
   }
@@ -140,13 +180,21 @@ async function copyPublishedFiles(sourceDirectory, targetDirectory, relativeDire
     if (entry.isDirectory()) {
       await fs.mkdir(targetPath, { recursive: true });
       await copyPublishedFiles(sourcePath, targetPath, path.join(relativeDirectory, entry.name));
-    } else if (entry.isFile()) {
+    } else if (entry.isFile() && !/\.md$/i.test(entry.name)) {
       await fs.copyFile(sourcePath, targetPath);
     }
   }
 }
 
-function readMetadata(source) {
+async function renderMarkdownPages(markdownPages, targetDirectory, siteConfig) {
+  for (const page of markdownPages) {
+    const targetPath = path.join(targetDirectory, ...page.outputPath.split("/"));
+    await fs.mkdir(path.dirname(targetPath), { recursive: true });
+    await fs.writeFile(targetPath, renderMarkdownDocument(page, siteConfig), "utf8");
+  }
+}
+
+function readHtmlMetadata(source) {
   const titleMatch = source.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
   const metadata = {
     title: cleanText(titleMatch?.[1] ?? ""),
@@ -170,6 +218,62 @@ function readMetadata(source) {
   }
 
   return metadata;
+}
+
+function readMarkdownDocument(source) {
+  const normalizedSource = source.replace(/^\uFEFF/, "").replace(/\r\n/g, "\n");
+  const frontMatterMatch = normalizedSource.match(/^---\n([\s\S]*?)\n---(?:\n|$)/);
+  const frontMatter = frontMatterMatch ? parseFrontMatter(frontMatterMatch[1]) : {};
+  const body = frontMatterMatch
+    ? normalizedSource.slice(frontMatterMatch[0].length)
+    : normalizedSource;
+  const firstHeading = body.match(/^#\s+(.+)$/m)?.[1] ?? "";
+  const firstParagraph = body
+    .split(/\n\s*\n/)
+    .map(block => block.trim())
+    .find(block => block && !/^(?:#|>|-|\*|\d+\.|```|~~~)/.test(block)) ?? "";
+  const orderValue = frontMatter.order
+    ?? frontMatter["directory-order"]
+    ?? Number.MAX_SAFE_INTEGER;
+
+  return {
+    metadata: {
+      title: cleanMarkdownText(frontMatter.title ?? firstHeading),
+      directoryTitle: cleanMarkdownText(
+        frontMatter.directoryTitle ?? frontMatter["directory-title"] ?? ""
+      ),
+      description: cleanMarkdownText(frontMatter.description ?? firstParagraph),
+      hidden: String(
+        frontMatter.hidden ?? frontMatter["directory-hidden"] ?? false
+      ).toLowerCase() === "true",
+      order: Number.isFinite(Number(orderValue)) ? Number(orderValue) : Number.MAX_SAFE_INTEGER
+    },
+    body
+  };
+}
+
+function parseFrontMatter(source) {
+  const values = {};
+
+  for (const line of source.split("\n")) {
+    const match = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
+    if (!match) continue;
+
+    const key = match[1];
+    const value = match[2].trim().replace(/^(?:"([\s\S]*)"|'([\s\S]*)')$/, "$1$2");
+    values[key] = value;
+  }
+
+  return values;
+}
+
+function cleanMarkdownText(value) {
+  return String(value ?? "")
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/[*_`~>#]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function readAttributes(tag) {
@@ -270,6 +374,46 @@ function countPages(node) {
   return count;
 }
 
+function renderMarkdownDocument(page, siteConfig) {
+  const directoryDepth = page.outputPath.split("/").length - 1;
+  const rootPrefix = directoryDepth ? "../".repeat(directoryDepth) : "./";
+  const articleSource = page.markdownBody.replace(/^\s*#\s+.+?(?:\n+|$)/, "");
+  const articleHtml = markdownRenderer.render(articleSource);
+
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="${escapeAttribute(page.description)}" />
+  <meta name="color-scheme" content="dark" />
+  <title>${escapeHtml(page.title)} | ${escapeHtml(siteConfig.title)}</title>
+  <link rel="stylesheet" href="${rootPrefix}assets/markdown.css" />
+</head>
+<body>
+  <main class="article-shell">
+    <nav class="article-nav" aria-label="文章导航">
+      <a class="back-link" href="${rootPrefix}index.html">${icon("arrowBack", 17)} 返回页面目录</a>
+      <a class="repository-link" href="${escapeAttribute(siteConfig.repositoryUrl)}" target="_blank" rel="noreferrer">${icon("github", 17)} 查看源码</a>
+    </nav>
+    <header class="article-header">
+      <span class="source-badge">Markdown</span>
+      <h1>${escapeHtml(page.title)}</h1>
+      ${page.description ? `<p>${escapeHtml(page.description)}</p>` : ""}
+    </header>
+    <article class="markdown-body">
+${articleHtml}
+    </article>
+    <footer class="article-footer">
+      <span>由 Markdown 自动生成</span>
+      <code>${escapeHtml(page.relativePath)}</code>
+    </footer>
+  </main>
+</body>
+</html>
+`;
+}
+
 function renderDocument({ config, tree, pages: allPages, folderCount }) {
   const rootPages = tree.pages.map(renderPageCard).join("\n");
   const folders = [...tree.folders.values()].map(folder => renderFolder(folder, 0)).join("\n");
@@ -360,6 +504,7 @@ function renderPageCard(page) {
 function icon(name, size) {
   const paths = {
     arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+    arrowBack: '<path d="M19 12H5M11 18l-6-6 6-6"/>',
     chevron: '<path d="m9 18 6-6-6-6"/>',
     folder: '<path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H10l2 2h6.5A2.5 2.5 0 0 1 21 9.5v7A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5z"/>',
     github: '<path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.69c-2.78.6-3.37-1.18-3.37-1.18-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.35 1.09 2.92.83.09-.65.35-1.09.64-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.6 9.6 0 0 1 12 6.8a9.6 9.6 0 0 1 2.5.34c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.79c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/>',

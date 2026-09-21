@@ -5,7 +5,9 @@
   "repositoryUrl": "https://github.com/dengwangtao/dengwangtao.github.io",
   "exclude": [
     "index.html",
-    "404.html"
+    "404.html",
+    "README.md",
+    "DIRECTORY_CONFIG.md"
   ],
   "pinned": [
     "about.html",

@@ -1,6 +1,6 @@
 # dengwangtao.github.io
 
-个人 GitHub Pages 站点。首页目录由脚本自动扫描仓库内的 HTML 文件生成，并通过 GitHub Actions 部署。
+个人 GitHub Pages 站点。首页目录由脚本自动扫描仓库内的 HTML 和 Markdown 文件生成，并通过 GitHub Actions 部署。
 
 ## 添加页面
 
@@ -30,13 +30,27 @@ notes/
 <meta name="directory-hidden" content="true">
 ```
 
+Markdown 文件会在构建时自动转换为同路径的 `.html` 页面：
+
+```markdown
+---
+title: JavaScript 学习笔记
+description: JavaScript 基础知识整理
+order: 10
+---
+
+# JavaScript 学习笔记
+
+正文支持表格、代码块、引用和常用 Markdown 语法。
+```
+
 ## 本地生成
 
 ```bash
 npm run generate
 ```
 
-该命令会更新根目录的 `index.html`，便于直接预览。
+该命令会生成完整的 `_site/` 目录。使用浏览器打开 `_site/index.html` 即可预览。
 
 ## 构建检查
 

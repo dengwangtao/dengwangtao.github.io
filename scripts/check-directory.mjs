@@ -10,22 +10,27 @@ const ignoredTopLevelEntries = new Set([
   ".github",
   ".codegraph",
   "_site",
+  "DIRECTORY_CONFIG.md",
   "node_modules",
+  "README.md",
   "scripts"
 ]);
 const config = JSON.parse(
   await fs.readFile(path.join(projectRoot, "directory.config.json"), "utf8")
 );
 const excludedPages = new Set((config.exclude ?? []).map(normalizePath));
-const sourcePages = (await collectHtmlFiles(projectRoot, ""))
+const sourcePages = (await collectContentFiles(projectRoot, ""))
   .map(normalizePath)
   .filter(page => !excludedPages.has(page));
 const listedPages = [];
 
 for (const page of sourcePages) {
   const source = await fs.readFile(path.join(projectRoot, ...page.split("/")), "utf8");
-  if (!/<meta\b[^>]*name=["']directory-hidden["'][^>]*content=["']true["'][^>]*>/i.test(source)
-    && !/<meta\b[^>]*content=["']true["'][^>]*name=["']directory-hidden["'][^>]*>/i.test(source)) {
+  const htmlHidden = /<meta\b[^>]*name=["']directory-hidden["'][^>]*content=["']true["'][^>]*>/i.test(source)
+    || /<meta\b[^>]*content=["']true["'][^>]*name=["']directory-hidden["'][^>]*>/i.test(source);
+  const markdownHidden = /^---\s*$[\s\S]*?^(?:hidden|directory-hidden):\s*true\s*$[\s\S]*?^---\s*$/im.test(source);
+
+  if (!htmlHidden && !markdownHidden) {
     listedPages.push(page);
   }
 }
@@ -38,7 +43,17 @@ if (listedPages.some(page => page.includes("/"))) {
 }
 
 for (const page of sourcePages) {
-  await fs.access(path.join(buildDirectory, ...page.split("/")));
+  const outputPage = page.replace(/\.md$/i, ".html");
+  await fs.access(path.join(buildDirectory, ...outputPage.split("/")));
+
+  if (/\.md$/i.test(page)) {
+    const renderedMarkdown = await fs.readFile(
+      path.join(buildDirectory, ...outputPage.split("/")),
+      "utf8"
+    );
+    assert(renderedMarkdown.includes('class="markdown-body"'), `Markdown 未正确渲染：${page}`);
+    assert(renderedMarkdown.includes("assets/markdown.css"), `Markdown 页面缺少样式：${page}`);
+  }
 }
 
 for (const page of listedPages) {
@@ -55,9 +70,11 @@ for (const unpublishedPath of ["scripts", ".github", "package.json", "directory.
   }
 }
 
-console.log(`目录校验通过：${listedPages.length} 个页面已收录，${sourcePages.length} 个 HTML 文件已复制。`);
+await fs.access(path.join(buildDirectory, "assets", "markdown.css"));
 
-async function collectHtmlFiles(currentDirectory, relativeDirectory) {
+console.log(`目录校验通过：${listedPages.length} 个页面已收录，${sourcePages.length} 个内容文件已发布。`);
+
+async function collectContentFiles(currentDirectory, relativeDirectory) {
   const entries = await fs.readdir(currentDirectory, { withFileTypes: true });
   const results = [];
 
@@ -67,8 +84,8 @@ async function collectHtmlFiles(currentDirectory, relativeDirectory) {
 
     const relativePath = path.join(relativeDirectory, entry.name);
     if (entry.isDirectory()) {
-      results.push(...await collectHtmlFiles(path.join(currentDirectory, entry.name), relativePath));
-    } else if (entry.isFile() && /\.html?$/i.test(entry.name)) {
+      results.push(...await collectContentFiles(path.join(currentDirectory, entry.name), relativePath));
+    } else if (entry.isFile() && /\.(?:html?|md)$/i.test(entry.name)) {
       results.push(relativePath);
     }
   }

@@ -1,1 +1,3 @@
 _site/
+.npm-cache/
+node_modules/

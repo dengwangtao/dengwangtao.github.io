@@ -11,7 +11,7 @@ npm run build
 npm run check
 ```
 
-生成器会递归扫描仓库中的所有 `.html` 和 `.htm` 文件，将页面与文件夹层级写入 `_site/index.html`，然后部署 `_site/`。
+生成器会递归扫描仓库中的所有 `.html`、`.htm` 和 `.md` 文件，将页面与文件夹层级写入 `_site/index.html`，然后部署 `_site/`。Markdown 会转换为同路径、同文件名的 `.html` 页面。
 
 本地预览时可以运行：
 
@@ -19,7 +19,7 @@ npm run check
 npm run generate
 ```
 
-该命令会直接更新仓库根目录的 `index.html`。
+该命令会生成完整的 `_site/` 发布目录。使用浏览器打开 `_site/index.html` 即可预览。
 
 ## 全局配置
 
@@ -33,7 +33,9 @@ npm run generate
   "repositoryUrl": "https://github.com/dengwangtao/dengwangtao.github.io",
   "exclude": [
     "index.html",
-    "404.html"
+    "404.html",
+    "README.md",
+    "DIRECTORY_CONFIG.md"
   ],
   "pinned": [
     "about.html",
@@ -58,7 +60,7 @@ npm run generate
 
 ## 添加页面
 
-HTML 文件可以放在仓库根目录，也可以放入任意层级的文件夹：
+HTML 和 Markdown 文件都可以放在仓库根目录，也可以放入任意层级的文件夹：
 
 ```text
 tools/
@@ -66,7 +68,7 @@ tools/
     formatter.html
 notes/
   english/
-    vocabulary.html
+    vocabulary.md
 ```
 
 目录结构会自动按照实际文件夹层级生成。新增文件后直接提交并推送即可。
@@ -82,6 +84,37 @@ notes/
 ```
 
 如果没有 `<title>`，生成器会根据文件名生成标题；如果没有描述，则会生成简单的默认描述。
+
+### Markdown 页面
+
+Markdown 文件支持顶部 front matter 配置：
+
+```markdown
+---
+title: JavaScript 学习笔记
+description: JavaScript 基础知识整理
+order: 10
+hidden: false
+---
+
+# JavaScript 学习笔记
+
+## 变量
+
+使用 `const` 声明不需要重新赋值的变量。
+```
+
+字段含义：
+
+| 字段 | 作用 |
+| --- | --- |
+| `title` | 页面标题和目录标题。没有配置时读取正文中的第一个一级标题。 |
+| `description` | 目录卡片和页面顶部的简介。 |
+| `order` | 同一文件夹中的排列顺序，数值越小越靠前。 |
+| `hidden` | 设置为 `true` 时不显示在目录中，但仍会生成 HTML。 |
+| `directory-title` | 只覆盖目录卡片标题。 |
+
+例如 `notes/javascript/basic.md` 会生成 `_site/notes/javascript/basic.html`。Markdown 中指向其他 `.md` 文件的链接也会自动改写为 `.html`。
 
 ## 页面级配置
 
