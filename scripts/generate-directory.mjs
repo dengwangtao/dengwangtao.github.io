@@ -2,6 +2,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import hljs from "highlight.js";
 import MarkdownIt from "markdown-it";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
@@ -50,6 +51,27 @@ markdownRenderer.renderer.rules.link_open = (tokens, index, options, environment
   }
 
   return defaultLinkRenderer(tokens, index, options, environment, renderer);
+};
+
+const defaultFenceRenderer = markdownRenderer.renderer.rules.fence;
+markdownRenderer.renderer.rules.fence = (tokens, index, options, environment, renderer) => {
+  const token = tokens[index];
+  const language = token.info.trim().split(/\s+/)[0].toLowerCase();
+
+  if (language === "mermaid") {
+    return `<pre class="mermaid" role="img" aria-label="Mermaid diagram">${markdownRenderer.utils.escapeHtml(token.content)}</pre>\n`;
+  }
+
+  if (language && hljs.getLanguage(language)) {
+    const highlightedCode = hljs.highlight(token.content, {
+      language,
+      ignoreIllegals: true
+    }).value;
+    const languageClass = markdownRenderer.utils.escapeHtml(language);
+    return `<pre><code class="hljs language-${languageClass}">${highlightedCode}</code></pre>\n`;
+  }
+
+  return defaultFenceRenderer(tokens, index, options, environment, renderer);
 };
 
 const outputFlagIndex = process.argv.indexOf("--output");
@@ -379,6 +401,9 @@ function renderMarkdownDocument(page, siteConfig) {
   const rootPrefix = directoryDepth ? "../".repeat(directoryDepth) : "./";
   const articleSource = page.markdownBody.replace(/^\s*#\s+.+?(?:\n+|$)/, "");
   const articleHtml = markdownRenderer.render(articleSource);
+  const mermaidScript = articleHtml.includes('class="mermaid"')
+    ? `  <script type="module" src="${rootPrefix}assets/mermaid.js"></script>\n`
+    : "";
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -409,7 +434,7 @@ ${articleHtml}
       <code>${escapeHtml(page.relativePath)}</code>
     </footer>
   </main>
-</body>
+${mermaidScript}</body>
 </html>
 `;
 }

@@ -47,12 +47,27 @@ for (const page of sourcePages) {
   await fs.access(path.join(buildDirectory, ...outputPage.split("/")));
 
   if (/\.md$/i.test(page)) {
+    const source = await fs.readFile(
+      path.join(projectRoot, ...page.split("/")),
+      "utf8"
+    );
     const renderedMarkdown = await fs.readFile(
       path.join(buildDirectory, ...outputPage.split("/")),
       "utf8"
     );
     assert(renderedMarkdown.includes('class="markdown-body"'), `Markdown 未正确渲染：${page}`);
     assert(renderedMarkdown.includes("assets/markdown.css"), `Markdown 页面缺少样式：${page}`);
+
+    const hasMermaid = /^(?:`{3,}|~{3,})\s*mermaid(?:\s|$)/im.test(source);
+    if (hasMermaid) {
+      assert(renderedMarkdown.includes('class="mermaid"'), `Mermaid 未正确转换：${page}`);
+      assert(renderedMarkdown.includes("assets/mermaid.js"), `Mermaid 页面缺少渲染脚本：${page}`);
+    }
+
+    const hasHighlightedCode = /^(?:`{3,}|~{3,})\s*(?:cpp|c\+\+|javascript|js|json|html|css|bash)(?:\s|$)/im.test(source);
+    if (hasHighlightedCode) {
+      assert(renderedMarkdown.includes('class="hljs language-'), `代码块未正确高亮：${page}`);
+    }
   }
 }
 
@@ -71,6 +86,7 @@ for (const unpublishedPath of ["scripts", ".github", "package.json", "directory.
 }
 
 await fs.access(path.join(buildDirectory, "assets", "markdown.css"));
+await fs.access(path.join(buildDirectory, "assets", "mermaid.js"));
 
 console.log(`目录校验通过：${listedPages.length} 个页面已收录，${sourcePages.length} 个内容文件已发布。`);
 

@@ -116,6 +116,33 @@ hidden: false
 
 例如 `notes/javascript/basic.md` 会生成 `_site/notes/javascript/basic.html`。Markdown 中指向其他 `.md` 文件的链接也会自动改写为 `.html`。
 
+带语言名称的代码围栏会在构建时自动生成语法高亮，例如：
+
+````markdown
+```cpp
+#include <iostream>
+
+int main() {
+    std::cout << "Hello";
+}
+```
+````
+
+### Mermaid 图表
+
+Markdown 页面支持 Mermaid。在代码围栏中把语言标记为 `mermaid`：
+
+````markdown
+```mermaid
+flowchart LR
+    A[开始] --> B[构建 Markdown]
+    B --> C[生成 HTML]
+    C --> D[浏览器渲染图表]
+```
+````
+
+构建器会自动把代码块转换为 Mermaid 容器，并且只在包含图表的页面加载 `assets/mermaid.js`。浏览器需要能够访问 Mermaid 使用的 CDN；加载失败时页面会保留图表源代码并在控制台输出错误。
+
 ## 页面级配置
 
 页面可以通过 `<meta>` 标签覆盖目录中的显示方式。
