@@ -44,7 +44,19 @@
     .source-list{font-size:13px;color:var(--muted)}.source-list li{margin:6px 0}
     footer{text-align:center;color:#7d6e6c;margin-top:32px;font-size:13px}
     .print-note{display:none}
-    @media(max-width:800px){body{background:linear-gradient(180deg,#321317 0,#6d1922 390px,#f4eee7 390px)}.shell{width:min(100% - 18px,1120px)}.hero{padding:34px 4px 26px}.hero:after{font-size:72px}.flight-strip{grid-template-columns:1fr auto 1fr;padding:14px;gap:8px}.airport strong{font-size:18px}.toolbar{top:5px;overflow-x:auto;flex-wrap:nowrap}.toolbar .spacer,.progress-wrap{display:none}.third,.half,.two-third{grid-column:span 12}.stats{grid-template-columns:repeat(2,1fr)}.day{grid-template-columns:1fr}.day-head{position:static;display:flex;align-items:center;gap:12px}.day-head small{margin:0}.day-head .tag{margin:0 0 0 auto}.card{padding:17px}.section-title{font-size:22px}}
+
+
+    .terrain3d-wrap{position:relative;margin:12px 0 14px;border:1px solid #dbcbbb;border-radius:16px;overflow:hidden;background:radial-gradient(circle at 50% 15%,#fffaf2 0,#eadcc9 75%,#d5c0a7 100%);box-shadow:inset 0 0 50px rgba(84,50,31,.10)}
+    .terrain3d-canvas{display:block;width:100%;height:clamp(430px,58vw,650px);touch-action:none;cursor:grab}.terrain3d-canvas:active{cursor:grabbing}
+    .terrain3d-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;background:#fffaf3;border:1px solid var(--line);border-radius:12px;margin:10px 0;color:var(--muted);font-size:12px}.terrain3d-toolbar strong{color:var(--ink)}.terrain3d-toolbar label{display:flex;align-items:center;gap:7px}.terrain3d-toolbar input[type="range"]{accent-color:var(--red);width:120px}.terrain3d-toolbar output{min-width:34px;color:var(--red);font-weight:800}.terrain-view-actions{display:flex;gap:6px;margin-left:auto}.terrain3d-toolbar button{border:0;border-radius:9px;background:#f0e3d8;color:#583f40;padding:7px 10px;cursor:pointer;font:inherit}.terrain3d-toolbar button.view-active{background:var(--red);color:#fff}
+    .terrain3d-badge{position:absolute;left:13px;top:13px;display:flex;gap:7px;align-items:center;padding:7px 10px;border-radius:10px;background:rgba(39,27,27,.78);color:white;font-size:11px;backdrop-filter:blur(7px);pointer-events:none}.terrain3d-badge i{width:8px;height:8px;border-radius:50%;background:#75d59e;box-shadow:0 0 0 4px rgba(117,213,158,.15)}
+    .terrain3d-compass{position:absolute;right:14px;top:14px;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:rgba(255,250,244,.86);border:1px solid rgba(97,64,54,.2);font-size:10px;font-weight:900;color:#70494c;box-shadow:0 4px 12px rgba(57,31,28,.12);pointer-events:none}.terrain3d-compass:after{content:"";position:absolute;top:6px;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:13px solid var(--red)}
+    .terrain3d-help{position:absolute;right:13px;bottom:12px;padding:6px 9px;border-radius:8px;background:rgba(255,250,244,.84);color:#68595a;font-size:11px;pointer-events:none}.flat-map-details{border:1px solid var(--line);background:#fff;padding:0 10px;margin-top:12px}.flat-map-details summary{padding:11px 2px;color:#6e4d4e}.flat-map-details .route-map-svg{margin-bottom:8px}
+    .map-note{display:flex;gap:10px;align-items:flex-start;margin-bottom:14px;padding:12px 14px;border-radius:12px;background:#fff6df;border:1px solid #edd8a8;color:#6e5524;font-size:13px}
+    .map-note b{white-space:nowrap}.map-card{padding:16px;overflow:hidden}.map-filter{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}.map-filter button{border:1px solid var(--line);background:#fff;padding:7px 11px;border-radius:999px;color:var(--ink);font:inherit;font-size:12px;cursor:pointer}.map-filter button.active{background:var(--red);border-color:var(--red);color:#fff}.route-map-svg{display:block;width:100%;height:auto;border-radius:14px;background:linear-gradient(145deg,#f8f1e7,#fffaf4)}
+    .contour{fill:none;stroke:#d9c7b4;stroke-width:1.3;opacity:.65}.ridge-fill{fill:#ead5bd;opacity:.58}.high-fill{fill:#d0b28f;opacity:.45}.river-outline{fill:none;stroke:#fff;stroke-width:36;stroke-linecap:round;stroke-linejoin:round}.river{fill:none;stroke:#a8d8e8;stroke-width:28;stroke-linecap:round;stroke-linejoin:round}.river-label{fill:#36758a;font-size:13px;font-weight:700;letter-spacing:.14em}.place-dot{fill:#473234;stroke:#fff;stroke-width:3}.place-label{fill:#352729;font-size:13px;font-weight:700;paint-order:stroke;stroke:#fffaf4;stroke-width:4px;stroke-linejoin:round}.minor-label{fill:#79696a;font-size:11px;paint-order:stroke;stroke:#fffaf4;stroke-width:3px}.route-day{transition:opacity .25s}.route-day.dimmed{opacity:.08}.route-path{fill:none;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 2px 1px rgba(38,21,21,.15))}.route-d1 .route-path,.d1-dot{stroke:#c32835;fill:#c32835}.route-d2 .route-path,.d2-dot{stroke:#e09b32;fill:#e09b32}.route-d3 .route-path,.d3-dot{stroke:#35866a;fill:#35866a}.route-d4 .route-path,.d4-dot{stroke:#3877a7;fill:#3877a7}.route-dash{stroke-dasharray:10 9}.step-num{fill:#fff;font-size:10px;font-weight:900;text-anchor:middle;dominant-baseline:central;stroke:none}.map-legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin:12px 2px 2px;font-size:12px;color:var(--muted)}.legend-item{display:flex;align-items:center;gap:6px}.legend-dot{width:11px;height:11px;border-radius:50%}.legend-d1{background:#c32835}.legend-d2{background:#e09b32}.legend-d3{background:#35866a}.legend-d4{background:#3877a7}
+    .profile-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:16px}.profile-card{border:1px solid var(--line);border-radius:15px;background:#fff;padding:14px}.profile-card h3{display:flex;justify-content:space-between;gap:8px;font-size:15px;margin:0 0 5px}.profile-card h3 small{color:var(--muted);font-weight:400}.profile-svg{display:block;width:100%;height:auto}.profile-gridline{stroke:#e9ded5;stroke-width:1;stroke-dasharray:4 5}.profile-axis{fill:#9b8987;font-size:9px}.profile-label{fill:#4d3a3b;font-size:10px;font-weight:700;text-anchor:middle}.profile-area{opacity:.14}.profile-line{fill:none;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}.profile-point{stroke:#fff;stroke-width:3}.height-tips{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}.height-tip{padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff}.height-tip b{display:block;color:var(--red-dark);font-size:14px}.height-tip span{color:var(--muted);font-size:12px}
+    @media(max-width:800px){body{background:linear-gradient(180deg,#321317 0,#6d1922 390px,#f4eee7 390px)}.shell{width:min(100% - 18px,1120px)}.hero{padding:34px 4px 26px}.hero:after{font-size:72px}.flight-strip{grid-template-columns:1fr auto 1fr;padding:14px;gap:8px}.airport strong{font-size:18px}.toolbar{top:5px;overflow-x:auto;flex-wrap:nowrap}.toolbar .spacer,.progress-wrap{display:none}.third,.half,.two-third{grid-column:span 12}.stats{grid-template-columns:repeat(2,1fr)}.day{grid-template-columns:1fr}.day-head{position:static;display:flex;align-items:center;gap:12px}.day-head small{margin:0}.day-head .tag{margin:0 0 0 auto}.card{padding:17px}.section-title{font-size:22px}.profile-grid{grid-template-columns:1fr}.height-tips{grid-template-columns:repeat(2,1fr)}.map-card{padding:8px}.terrain3d-canvas{height:480px}.terrain-view-actions{margin-left:0}.terrain3d-help{display:none}.place-label{font-size:15px}.minor-label{font-size:12px}}
     @media print{body{background:white}.shell{width:100%;padding:0}.hero{color:#222;padding:10px 0}.hero:after,.toolbar{display:none}.subtitle,.airport span{color:#555}.flight-strip{background:white;border:1px solid #aaa}.card{box-shadow:none;break-inside:avoid}.day-head{position:static;background:#eee;color:#222;border:1px solid #aaa}.day-head small{color:#555}.print-note{display:block}.section{break-inside:auto}a{color:#222;text-decoration:none}}
   </style>
 </head>
@@ -62,7 +74,7 @@
     </header>
 
     <nav class="toolbar">
-      <a href="#overview">总览</a><a href="#itinerary">每日行程</a><a href="#food">吃什么</a><a href="#checklist">清单</a><a href="#tips">避坑</a>
+      <a href="#overview">总览</a><a href="#route-map">3D路线</a><a href="#itinerary">每日行程</a><a href="#food">吃什么</a><a href="#checklist">清单</a><a href="#tips">避坑</a>
       <span class="spacer"></span>
       <span class="progress-wrap">准备进度 <span class="progress"><i id="bar"></i></span><b id="pct">0%</b></span>
       <button class="primary" onclick="window.print()">打印 / 存为 PDF</button>
@@ -120,8 +132,156 @@
       </div>
     </section>
 
+
+    <section id="route-map" class="section">
+      <h2 class="section-title"><span>03</span>3D路线地图与山城高差</h2>
+      <div class="map-note"><b>🗺️ 示意图说明</b><span>上方为可旋转、可缩放的3D地形示意图；下方保留可展开的2D路线图和每日高度剖面。它们不是精确导航或测绘数据，重点用于判断“哪里上坡、哪里下坡、哪里适合坐地铁绕开爬升”。</span></div>
+      <article class="card map-card">
+        <div class="map-filter" role="group" aria-label="路线筛选">
+          <button type="button" class="active" data-route-filter="all" aria-pressed="true">全部路线</button>
+          <button type="button" data-route-filter="d1" aria-pressed="false">10/2 解放碑夜景</button>
+          <button type="button" data-route-filter="d2" aria-pressed="false">10/3 李子坝鹅岭</button>
+          <button type="button" data-route-filter="d3" aria-pressed="false">10/4 磁器口步道</button>
+          <button type="button" data-route-filter="d4" aria-pressed="false">10/5 索道返机场</button>
+        </div>
+
+        <div class="terrain3d-toolbar">
+          <strong>3D 视角</strong><span>左右拖动同向旋转 · 向下拖动进入俯视 · 滚轮/双指缩放</span>
+          <label>地形夸张 <input id="terrainHeightScale" type="range" min="0.8" max="3" step="0.1" value="1.8" aria-label="地形高度夸张倍数"><output id="terrainHeightValue">1.8×</output></label>
+          <span class="terrain-view-actions"><button type="button" id="terrainOblique" class="view-active">斜视</button><button type="button" id="terrainTop">俯视</button><button type="button" id="terrainReset">重置</button></span>
+        </div>
+        <div class="terrain3d-wrap">
+          <canvas id="terrain3d" class="terrain3d-canvas" aria-label="可旋转的重庆路线三维地形示意图">当前浏览器不支持Canvas，请展开下方2D地图。</canvas>
+          <div class="terrain3d-badge"><i></i>互动式山城地形</div>
+          <div class="terrain3d-compass">N</div>
+          <div class="terrain3d-help">高处颜色更深 · 蓝色为两江河谷</div>
+        </div>
+        <details class="flat-map-details">
+          <summary>展开2D平面路线图（打印或无法显示3D时使用）</summary>
+        <svg class="route-map-svg" viewBox="0 0 900 540" role="img" aria-labelledby="mapTitle mapDesc">
+          <title id="mapTitle">重庆市区四天路线和地形示意图</title>
+          <desc id="mapDesc">示意嘉陵江、长江、渝中半岛、磁器口、李子坝、鹅岭、解放碑、洪崖洞、龙门浩、朝天门以及江北机场之间的路线。</desc>
+          <defs>
+            <pattern id="tinyGrid" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0H0V30" fill="none" stroke="#eadfd3" stroke-width=".6" opacity=".55"/></pattern>
+          </defs>
+          <rect width="900" height="540" fill="url(#tinyGrid)"/>
+          <path class="ridge-fill" d="M160 292 C245 245 320 222 415 213 C515 204 604 225 700 280 C655 305 602 333 545 357 C437 334 316 320 160 292Z"/>
+          <path class="high-fill" d="M185 145 C220 111 285 108 326 139 C315 184 287 207 239 213 C201 202 181 180 185 145Z"/>
+          <path class="contour" d="M90 314 C220 250 350 242 484 253 C625 264 712 311 815 365"/>
+          <path class="contour" d="M102 337 C236 278 360 269 489 279 C627 289 718 333 802 386"/>
+          <path class="contour" d="M145 189 C204 120 292 100 358 142 C395 165 410 187 431 214"/>
+          <path class="contour" d="M162 208 C220 151 285 133 342 161 C377 178 391 197 405 221"/>
+          <path class="river-outline" d="M0 242 C121 255 208 266 296 259 C386 251 455 220 535 188 C606 159 694 151 900 184"/>
+          <path class="river" d="M0 242 C121 255 208 266 296 259 C386 251 455 220 535 188 C606 159 694 151 900 184"/>
+          <path class="river-outline" d="M535 188 C556 242 572 286 634 329 C702 376 789 413 900 453"/>
+          <path class="river" d="M535 188 C556 242 572 286 634 329 C702 376 789 413 900 453"/>
+          <text class="river-label" x="95" y="232">嘉 陵 江</text><text class="river-label" x="704" y="389" transform="rotate(24 704 389)">长 江</text>
+          <text class="minor-label" x="354" y="310">渝中半岛沿江低、中央脊线高</text><text class="minor-label" x="206" y="122">鹅岭高地</text><text class="minor-label" x="675" y="294">两江交汇</text>
+
+          <g class="route-day route-d1" data-route-day="d1">
+            <path class="route-path" d="M474 240 L506 226 L488 272"/>
+            <path class="route-path route-dash" d="M488 272 Q542 211 595 158"/>
+            <circle class="d1-dot" cx="474" cy="240" r="11"/><text class="step-num" x="474" y="240">1</text>
+            <circle class="d1-dot" cx="506" cy="226" r="11"/><text class="step-num" x="506" y="226">2</text>
+            <circle class="d1-dot" cx="488" cy="272" r="11"/><text class="step-num" x="488" y="272">3</text>
+            <circle class="d1-dot" cx="595" cy="158" r="11"/><text class="step-num" x="595" y="158">4</text>
+          </g>
+          <g class="route-day route-d2" data-route-day="d2">
+            <path class="route-path" d="M474 240 L338 237 L225 228 L257 158 L421 105 L474 240"/>
+            <circle class="d2-dot" cx="338" cy="237" r="11"/><text class="step-num" x="338" y="237">1</text>
+            <circle class="d2-dot" cx="225" cy="228" r="11"/><text class="step-num" x="225" y="228">2</text>
+            <circle class="d2-dot" cx="257" cy="158" r="11"/><text class="step-num" x="257" y="158">3</text>
+            <circle class="d2-dot" cx="421" cy="105" r="11"/><text class="step-num" x="421" y="105">4</text>
+          </g>
+          <g class="route-day route-d3" data-route-day="d3">
+            <path class="route-path" d="M474 240 Q282 223 82 238 Q270 256 428 294 L455 313"/>
+            <circle class="d3-dot" cx="82" cy="238" r="11"/><text class="step-num" x="82" y="238">1</text>
+            <circle class="d3-dot" cx="428" cy="294" r="11"/><text class="step-num" x="428" y="294">2</text>
+            <circle class="d3-dot" cx="455" cy="313" r="11"/><text class="step-num" x="455" y="313">3</text>
+          </g>
+          <g class="route-day route-d4" data-route-day="d4">
+            <path class="route-path" d="M474 240 Q524 296 570 335 L535 250 L663 246"/>
+            <path class="route-path route-dash" d="M663 246 Q770 132 846 66"/>
+            <circle class="d4-dot" cx="570" cy="335" r="11"/><text class="step-num" x="570" y="335">1</text>
+            <circle class="d4-dot" cx="535" cy="250" r="11"/><text class="step-num" x="535" y="250">2</text>
+            <circle class="d4-dot" cx="663" cy="246" r="11"/><text class="step-num" x="663" y="246">3</text>
+            <circle class="d4-dot" cx="846" cy="66" r="11"/><text class="step-num" x="846" y="66">4</text>
+          </g>
+
+          <g>
+            <circle class="place-dot" cx="474" cy="240" r="6"/><text class="place-label" x="464" y="221" text-anchor="end">解放碑／民宿</text>
+            <circle class="place-dot" cx="506" cy="226" r="6"/><text class="place-label" x="514" y="216">魁星楼</text>
+            <circle class="place-dot" cx="535" cy="205" r="6"/><text class="place-label" x="544" y="196">洪崖洞</text>
+            <circle class="place-dot" cx="488" cy="272" r="6"/><text class="place-label" x="478" y="293" text-anchor="end">八一路／较场口</text>
+            <circle class="place-dot" cx="595" cy="158" r="6"/><text class="place-label" x="606" y="145">江北大剧院</text>
+            <circle class="place-dot" cx="338" cy="237" r="6"/><text class="place-label" x="330" y="222" text-anchor="end">三峡博物馆</text>
+            <circle class="place-dot" cx="225" cy="228" r="6"/><text class="place-label" x="218" y="249" text-anchor="end">李子坝</text>
+            <circle class="place-dot" cx="257" cy="158" r="6"/><text class="place-label" x="267" y="148">鹅岭</text>
+            <circle class="place-dot" cx="421" cy="105" r="6"/><text class="place-label" x="432" y="94">观音桥</text>
+            <circle class="place-dot" cx="82" cy="238" r="6"/><text class="place-label" x="72" y="218">磁器口</text>
+            <circle class="place-dot" cx="428" cy="294" r="6"/><text class="place-label" x="418" y="318" text-anchor="end">山城步道</text>
+            <circle class="place-dot" cx="455" cy="313" r="6"/><text class="place-label" x="466" y="332">十八梯</text>
+            <circle class="place-dot" cx="570" cy="335" r="6"/><text class="place-label" x="581" y="353">龙门浩／下浩里</text>
+            <circle class="place-dot" cx="535" cy="250" r="6"/><text class="place-label" x="545" y="270">索道北站</text>
+            <circle class="place-dot" cx="663" cy="246" r="6"/><text class="place-label" x="674" y="234">朝天门</text>
+            <circle class="place-dot" cx="846" cy="66" r="6"/><text class="place-label" x="836" y="47" text-anchor="end">江北机场 T3</text>
+          </g>
+        </svg>
+        </details>
+        <div class="map-legend">
+          <span class="legend-item"><i class="legend-dot legend-d1"></i>10/2 解放碑与夜景</span>
+          <span class="legend-item"><i class="legend-dot legend-d2"></i>10/3 博物馆—李子坝—鹅岭</span>
+          <span class="legend-item"><i class="legend-dot legend-d3"></i>10/4 磁器口与山城步道</span>
+          <span class="legend-item"><i class="legend-dot legend-d4"></i>10/5 南岸—索道—机场</span>
+          <span class="legend-item">虚线＝跨江或较长交通段</span>
+        </div>
+      </article>
+
+      <div class="profile-grid">
+        <article class="profile-card"><h3><span>10/2｜核心区夜景</span><small>高差约80m</small></h3>
+          <svg class="profile-svg" viewBox="0 0 520 155" role="img" aria-label="10月2日路线高度示意">
+            <path class="profile-gridline" d="M35 35H505M35 75H505M35 115H505"/><text class="profile-axis" x="4" y="38">高</text><text class="profile-axis" x="4" y="78">中</text><text class="profile-axis" x="4" y="118">低</text>
+            <path class="profile-area" fill="#c32835" d="M45 55 L165 64 L290 112 L405 108 L490 63 L490 135 L45 135Z"/><path class="profile-line" stroke="#c32835" d="M45 55 L165 64 L290 112 L405 108 L490 63"/>
+            <g fill="#c32835"><circle class="profile-point" cx="45" cy="55" r="6"/><circle class="profile-point" cx="165" cy="64" r="6"/><circle class="profile-point" cx="290" cy="112" r="6"/><circle class="profile-point" cx="405" cy="108" r="6"/><circle class="profile-point" cx="490" cy="63" r="6"/></g>
+            <text class="profile-label" x="45" y="148">机场≈270m</text><text class="profile-label" x="165" y="50">解放碑≈250m</text><text class="profile-label" x="290" y="101">洪崖洞江边≈185m</text><text class="profile-label" x="405" y="97">江北嘴≈190m</text><text class="profile-label" x="490" y="49">民宿</text>
+          </svg>
+        </article>
+        <article class="profile-card"><h3><span>10/3｜李子坝—鹅岭</span><small>全程最大高差约135m</small></h3>
+          <svg class="profile-svg" viewBox="0 0 520 155" role="img" aria-label="10月3日路线高度示意">
+            <path class="profile-gridline" d="M35 35H505M35 75H505M35 115H505"/><text class="profile-axis" x="4" y="38">高</text><text class="profile-axis" x="4" y="78">中</text><text class="profile-axis" x="4" y="118">低</text>
+            <path class="profile-area" fill="#e09b32" d="M45 72 L145 60 L250 108 L360 25 L475 65 L475 135 L45 135Z"/><path class="profile-line" stroke="#e09b32" d="M45 72 L145 60 L250 108 L360 25 L475 65"/>
+            <g fill="#e09b32"><circle class="profile-point" cx="45" cy="72" r="6"/><circle class="profile-point" cx="145" cy="60" r="6"/><circle class="profile-point" cx="250" cy="108" r="6"/><circle class="profile-point" cx="360" cy="25" r="6"/><circle class="profile-point" cx="475" cy="65" r="6"/></g>
+            <text class="profile-label" x="45" y="89">解放碑≈250m</text><text class="profile-label" x="145" y="48">博物馆≈270m</text><text class="profile-label" x="250" y="98">李子坝≈205m</text><text class="profile-label" x="360" y="16">鹅岭≈340m</text><text class="profile-label" x="475" y="53">观音桥≈260m</text>
+          </svg>
+        </article>
+        <article class="profile-card"><h3><span>10/4｜山城步道—十八梯</span><small>连续下坡，雨天防滑</small></h3>
+          <svg class="profile-svg" viewBox="0 0 520 155" role="img" aria-label="10月4日路线高度示意">
+            <path class="profile-gridline" d="M35 35H505M35 75H505M35 115H505"/><text class="profile-axis" x="4" y="38">高</text><text class="profile-axis" x="4" y="78">中</text><text class="profile-axis" x="4" y="118">低</text>
+            <path class="profile-area" fill="#35866a" d="M45 98 L160 66 L285 113 L385 68 L485 114 L485 135 L45 135Z"/><path class="profile-line" stroke="#35866a" d="M45 98 L160 66 L285 113 L385 68 L485 114"/>
+            <g fill="#35866a"><circle class="profile-point" cx="45" cy="98" r="6"/><circle class="profile-point" cx="160" cy="66" r="6"/><circle class="profile-point" cx="285" cy="113" r="6"/><circle class="profile-point" cx="385" cy="68" r="6"/><circle class="profile-point" cx="485" cy="114" r="6"/></g>
+            <text class="profile-label" x="45" y="88">磁器口≈210m</text><text class="profile-label" x="160" y="54">步道上口≈255m</text><text class="profile-label" x="285" y="102">沿江低处≈190m</text><text class="profile-label" x="385" y="56">十八梯上口≈250m</text><text class="profile-label" x="485" y="103">下口≈185m</text>
+          </svg>
+        </article>
+        <article class="profile-card"><h3><span>10/5｜南岸—朝天门—机场</span><small>老街内部台阶较多</small></h3>
+          <svg class="profile-svg" viewBox="0 0 520 155" role="img" aria-label="10月5日路线高度示意">
+            <path class="profile-gridline" d="M35 35H505M35 75H505M35 115H505"/><text class="profile-axis" x="4" y="38">高</text><text class="profile-axis" x="4" y="78">中</text><text class="profile-axis" x="4" y="118">低</text>
+            <path class="profile-area" fill="#3877a7" d="M40 72 L125 68 L210 111 L300 68 L390 111 L485 55 L485 135 L40 135Z"/><path class="profile-line" stroke="#3877a7" d="M40 72 L125 68 L210 111 L300 68 L390 111 L485 55"/>
+            <g fill="#3877a7"><circle class="profile-point" cx="40" cy="72" r="6"/><circle class="profile-point" cx="125" cy="68" r="6"/><circle class="profile-point" cx="210" cy="111" r="6"/><circle class="profile-point" cx="300" cy="68" r="6"/><circle class="profile-point" cx="390" cy="111" r="6"/><circle class="profile-point" cx="485" cy="55" r="6"/></g>
+            <text class="profile-label" x="40" y="89">民宿≈240m</text><text class="profile-label" x="125" y="55">龙门浩上口</text><text class="profile-label" x="210" y="101">下浩里≈190m</text><text class="profile-label" x="300" y="55">索道站≈245m</text><text class="profile-label" x="390" y="101">朝天门≈190m</text><text class="profile-label" x="485" y="43">机场≈270m</text>
+          </svg>
+        </article>
+      </div>
+
+      <div class="height-tips">
+        <div class="height-tip"><b>李子坝 → 鹅岭</b><span>最明显的一段爬升。不要步行硬爬，按计划乘2号线转1号线。</span></div>
+        <div class="height-tip"><b>洪崖洞／魁星楼</b><span>上层道路与江边看似很近，实际可能差十几层楼，先确认入口高度。</span></div>
+        <div class="height-tip"><b>山城步道／十八梯</b><span>优先从高处向低处走；雨天台阶湿滑，必要时只选一处。</span></div>
+        <div class="height-tip"><b>龙门浩／下浩里</b><span>老街内部上下穿行明显，索道票尽量选早班，减少反复爬坡。</span></div>
+      </div>
+    </section>
+
     <section id="itinerary" class="section">
-      <h2 class="section-title"><span>03</span>每日完整行程</h2>
+      <h2 class="section-title"><span>04</span>每日完整行程</h2>
 
       <article class="card day">
         <aside class="day-head"><div><b>10/01–02</b><small>抵达＋解放碑夜景</small></div><span class="tag">轻松</span></aside>
@@ -184,7 +344,7 @@
     </section>
 
     <section id="food" class="section">
-      <h2 class="section-title"><span>04</span>吃什么与怎么点</h2>
+      <h2 class="section-title"><span>05</span>吃什么与怎么点</h2>
       <div class="grid">
         <article class="card two-third">
           <table>
@@ -210,7 +370,7 @@
     </section>
 
     <section id="checklist" class="section">
-      <h2 class="section-title"><span>05</span>可勾选准备清单</h2>
+      <h2 class="section-title"><span>06</span>可勾选准备清单</h2>
       <div class="grid">
         <article class="card third">
           <h3>现在就办</h3>
@@ -267,7 +427,7 @@
     </section>
 
     <section id="tips" class="section">
-      <h2 class="section-title"><span>06</span>国庆实用 Tips</h2>
+      <h2 class="section-title"><span>07</span>国庆实用 Tips</h2>
       <div class="grid">
         <article class="card half">
           <details open><summary>客流与排队</summary><div>热门景点尽量09:00前抵达，正餐改在11:00和17:00。餐厅排队超过60分钟、索道排号明显过长时立即换项目。重庆同类型好店很多，不必执着单一网红店。</div></details>
@@ -285,7 +445,7 @@
     </section>
 
     <section class="section">
-      <h2 class="section-title"><span>07</span>预算参考</h2>
+      <h2 class="section-title"><span>08</span>预算参考</h2>
       <article class="card">
         <table>
           <thead><tr><th>项目</th><th>每人预算</th><th>说明</th></tr></thead>
@@ -301,7 +461,7 @@
     </section>
 
     <section class="section">
-      <h2 class="section-title"><span>08</span>信息来源与更新提醒</h2>
+      <h2 class="section-title"><span>09</span>信息来源与更新提醒</h2>
       <article class="card source-list">
         <p>本计划结合重庆官方交通与景区信息、中央气象台预报，以及小红书、知乎等旅行经验整理。开放时间、交通管制、演出和天气均可能临时变化，请以当天官方公告为准。</p>
         <ul>
@@ -338,6 +498,117 @@
         document.getElementById('pct').textContent = pct + '%';
       }
       update();
+
+      function initTerrain3d(){
+        var canvas = document.getElementById('terrain3d');
+        if (!canvas || !canvas.getContext) return null;
+        var ctx = canvas.getContext('2d');
+        var heightInput = document.getElementById('terrainHeightScale');
+        var heightOutput = document.getElementById('terrainHeightValue');
+        var resetButton = document.getElementById('terrainReset');
+        var topButton = document.getElementById('terrainTop');
+        var obliqueButton = document.getElementById('terrainOblique');
+        var camera = { azimuth:-0.78, tilt:0.72, zoom:7.6, heightScale:1.8 };
+        var activeFilter = 'all';
+        var dragging = false, lastX = 0, lastY = 0, pinchDistance = 0;
+        var colors = {d1:'#c32835',d2:'#e09b32',d3:'#35866a',d4:'#3877a7'};
+        var places = {
+          '磁器口':{x:7,z:35},'李子坝':{x:27,z:34},'鹅岭':{x:32,z:22},'三峡博物馆':{x:42,z:34},
+          '观音桥':{x:52,z:11},'解放碑':{x:58,z:35},'魁星楼':{x:62,z:31},'洪崖洞':{x:66,z:28},
+          '江北大剧院':{x:72,z:18},'山城步道':{x:51,z:44},'十八梯':{x:57,z:47},'龙门浩':{x:68,z:54},
+          '索道北站':{x:66,z:37},'朝天门':{x:79,z:37},'江北机场':{x:95,z:5}
+        };
+        var routes = {
+          d1:['解放碑','魁星楼','十八梯','江北大剧院'],
+          d2:['解放碑','三峡博物馆','李子坝','鹅岭','观音桥','解放碑'],
+          d3:['解放碑','磁器口','山城步道','十八梯'],
+          d4:['解放碑','龙门浩','索道北站','朝天门','江北机场']
+        };
+        function gauss(x,z,cx,cz,sx,sz,a){var dx=(x-cx)/sx,dz=(z-cz)/sz;return a*Math.exp(-(dx*dx+dz*dz)*1.7)}
+        function distanceToSegment(px,pz,ax,az,bx,bz){var vx=bx-ax,vz=bz-az,wx=px-ax,wz=pz-az,c1=vx*wx+vz*wz,c2=vx*vx+vz*vz,t=c2?Math.max(0,Math.min(1,c1/c2)):0;var dx=px-(ax+t*vx),dz=pz-(az+t*vz);return Math.sqrt(dx*dx+dz*dz)}
+        function terrainHeight(x,z){
+          var h=2.4;
+          h+=gauss(x,z,31,21,18,13,16);
+          h+=gauss(x,z,56,39,31,8,11);
+          h+=gauss(x,z,52,8,23,12,9);
+          h+=gauss(x,z,93,6,17,12,10);
+          var jz=37-0.17*x+2*Math.sin(x/15);
+          h-=gauss(x,z,x,jz,1,4.5,7.5);
+          var d2=distanceToSegment(x,z,64,27,104,60);
+          h-=6.4*Math.exp(-(d2*d2)/22);
+          return Math.max(.25,h);
+        }
+        function placeHeight(name){var p=places[name];var boosts={'鹅岭':5,'解放碑':2.5,'魁星楼':2.2,'三峡博物馆':2,'观音桥':1.4,'江北机场':2.5};return terrainHeight(p.x,p.z)+(boosts[name]||.8)}
+        function project(x,y,z,w,h){
+          var dx=x-52,dz=z-32,ca=Math.cos(camera.azimuth),sa=Math.sin(camera.azimuth);
+          var xr=dx*ca-dz*sa,zr=dx*sa+dz*ca;
+          return {x:w*.5+xr*camera.zoom,y:h*.54+zr*camera.zoom*Math.sin(camera.tilt)*.72-y*camera.heightScale*camera.zoom*Math.cos(camera.tilt),depth:zr};
+        }
+        function terrainColor(h,depth){var light=Math.max(48,82-h*1.45-depth*.08);var sat=31+Math.min(13,h*.55);return 'hsl(34,'+sat+'%,'+light+'%)'}
+        function resize(){var rect=canvas.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,2);var nw=Math.round(rect.width*dpr),nh=Math.round(rect.height*dpr);if(canvas.width!==nw||canvas.height!==nh){canvas.width=nw;canvas.height=nh;ctx.setTransform(dpr,0,0,dpr,0,0)}draw()}
+        function drawTerrain(w,h){
+          var cols=30,rows=21,cells=[];
+          for(var z=0;z<rows;z++){for(var x=0;x<cols;x++){var x0=x*100/cols,x1=(x+1)*100/cols,z0=z*65/rows,z1=(z+1)*65/rows;var y00=terrainHeight(x0,z0),y10=terrainHeight(x1,z0),y11=terrainHeight(x1,z1),y01=terrainHeight(x0,z1);var ps=[project(x0,y00,z0,w,h),project(x1,y10,z0,w,h),project(x1,y11,z1,w,h),project(x0,y01,z1,w,h)];cells.push({p:ps,depth:(ps[0].depth+ps[1].depth+ps[2].depth+ps[3].depth)/4,height:(y00+y10+y11+y01)/4})}}
+          cells.sort(function(a,b){return a.depth-b.depth});
+          cells.forEach(function(c){ctx.beginPath();ctx.moveTo(c.p[0].x,c.p[0].y);for(var i=1;i<4;i++)ctx.lineTo(c.p[i].x,c.p[i].y);ctx.closePath();ctx.fillStyle=terrainColor(c.height,c.depth);ctx.fill();ctx.strokeStyle='rgba(115,84,61,.16)';ctx.lineWidth=.65;ctx.stroke()});
+        }
+        function riverPointJ(x){return {x:x,z:37-.17*x+2*Math.sin(x/15)}}
+        function drawPolyline(points,stroke,width,dash,w,h){ctx.save();ctx.beginPath();points.forEach(function(p,i){var q=project(p.x,p.y,p.z,w,h);if(i===0)ctx.moveTo(q.x,q.y);else ctx.lineTo(q.x,q.y)});ctx.strokeStyle=stroke;ctx.lineWidth=width;ctx.lineJoin='round';ctx.lineCap='round';ctx.setLineDash(dash||[]);ctx.stroke();ctx.restore()}
+        function drawRivers(w,h){
+          var river1=[];for(var x=0;x<=100;x+=2){var p=riverPointJ(x);river1.push({x:p.x,z:p.z,y:.55})}
+          var river2=[];for(var t=0;t<=1;t+=.04){var x=64+42*t,z=27+34*t;river2.push({x:x,z:z,y:.55})}
+          drawPolyline(river1,'rgba(255,255,255,.86)',13,[],w,h);drawPolyline(river1,'#7bc5de',9,[],w,h);
+          drawPolyline(river2,'rgba(255,255,255,.86)',15,[],w,h);drawPolyline(river2,'#6ab9d5',10,[],w,h);
+        }
+        function drawRoute(key,names,w,h){
+          var points=names.map(function(name){var p=places[name];return{x:p.x,z:p.z,y:placeHeight(name)+1.5,name:name}});
+          var faded=activeFilter!=='all'&&activeFilter!==key;
+          ctx.save();ctx.globalAlpha=faded?.08:1;
+          drawPolyline(points,'rgba(255,255,255,.92)',9,[],w,h);drawPolyline(points,colors[key],5,key==='d4'?[9,7]:[],w,h);
+          points.forEach(function(p,index){var q=project(p.x,p.y,p.z,w,h);ctx.beginPath();ctx.arc(q.x,q.y,7,0,Math.PI*2);ctx.fillStyle=colors[key];ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#fff';ctx.stroke();ctx.fillStyle='#fff';ctx.font='800 9px Microsoft YaHei, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(index+1),q.x,q.y+.4)});ctx.restore();
+        }
+        function drawLabels(w,h){
+          var visible={};if(activeFilter==='all'){Object.keys(places).forEach(function(k){visible[k]=1})}else{routes[activeFilter].forEach(function(k){visible[k]=1})}
+          Object.keys(visible).forEach(function(name){var p=places[name],q=project(p.x,placeHeight(name)+2.8,p.z,w,h);var align=q.x>w*.72?'right':'left';var dx=align==='right'?-10:10;ctx.font='700 11px Microsoft YaHei, sans-serif';ctx.textAlign=align;ctx.textBaseline='middle';var tw=ctx.measureText(name).width;ctx.fillStyle='rgba(255,250,244,.87)';ctx.fillRect(align==='right'?q.x+dx-tw-5:q.x+dx-5,q.y-9,tw+10,18);ctx.fillStyle='#3f3031';ctx.fillText(name,q.x+dx,q.y)});
+        }
+        function drawScale(w,h){ctx.save();ctx.fillStyle='rgba(62,43,40,.7)';ctx.font='11px Microsoft YaHei, sans-serif';ctx.textAlign='left';ctx.fillText('相对高度',18,h-22);var colors2=['#ead8c4','#d2aa7f','#a86e4e'];for(var i=0;i<3;i++){ctx.fillStyle=colors2[i];ctx.fillRect(78+i*35,h-32,35,10)}ctx.fillStyle='rgba(62,43,40,.65)';ctx.fillText('低',78,h-38);ctx.fillText('高',171,h-38);ctx.restore()}
+        function draw(){var rect=canvas.getBoundingClientRect(),w=rect.width,h=rect.height;if(!w||!h)return;ctx.clearRect(0,0,w,h);var sky=ctx.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#fffaf2');sky.addColorStop(.62,'#efe2d1');sky.addColorStop(1,'#d7c2a8');ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);drawTerrain(w,h);drawRivers(w,h);Object.keys(routes).forEach(function(key){drawRoute(key,routes[key],w,h)});drawLabels(w,h);drawScale(w,h)}
+        function setFilter(filter){activeFilter=filter;draw()}
+        function updateViewButtons(){var top=camera.tilt>1.3;topButton.classList.toggle('view-active',top);obliqueButton.classList.toggle('view-active',!top)}
+        function setView(tilt){camera.tilt=tilt;updateViewButtons();draw()}
+        function reset(){camera.azimuth=-.78;camera.tilt=.72;camera.zoom=7.6;camera.heightScale=1.8;heightInput.value='1.8';heightOutput.textContent='1.8×';updateViewButtons();draw()}
+        canvas.addEventListener('pointerdown',function(e){dragging=true;lastX=e.clientX;lastY=e.clientY;canvas.setPointerCapture(e.pointerId)});
+        canvas.addEventListener('pointermove',function(e){if(!dragging)return;var dx=e.clientX-lastX,dy=e.clientY-lastY;lastX=e.clientX;lastY=e.clientY;camera.azimuth-=dx*.008;camera.tilt=Math.max(.18,Math.min(1.50,camera.tilt+dy*.008));updateViewButtons();draw()});
+        canvas.addEventListener('pointerup',function(){dragging=false});canvas.addEventListener('pointercancel',function(){dragging=false});
+        canvas.addEventListener('wheel',function(e){e.preventDefault();camera.zoom=Math.max(4.7,Math.min(12.5,camera.zoom*(e.deltaY>0?.92:1.08)));draw()},{passive:false});
+        canvas.addEventListener('touchstart',function(e){if(e.touches.length===2){var dx=e.touches[0].clientX-e.touches[1].clientX,dy=e.touches[0].clientY-e.touches[1].clientY;pinchDistance=Math.sqrt(dx*dx+dy*dy)}},{passive:true});
+        canvas.addEventListener('touchmove',function(e){if(e.touches.length===2&&pinchDistance){var dx=e.touches[0].clientX-e.touches[1].clientX,dy=e.touches[0].clientY-e.touches[1].clientY,d=Math.sqrt(dx*dx+dy*dy);camera.zoom=Math.max(4.7,Math.min(12.5,camera.zoom*d/pinchDistance));pinchDistance=d;draw()}},{passive:true});
+        heightInput.addEventListener('input',function(){camera.heightScale=parseFloat(heightInput.value);heightOutput.textContent=camera.heightScale.toFixed(1)+'×';draw()});
+        obliqueButton.addEventListener('click',function(){setView(.72)});
+        topButton.addEventListener('click',function(){setView(1.48)});
+        resetButton.addEventListener('click',reset);
+        canvas.addEventListener('dblclick',function(){setView(camera.tilt>1.3?.72:1.48)});
+        if(window.ResizeObserver){new ResizeObserver(resize).observe(canvas)}else{window.addEventListener('resize',resize)}
+        requestAnimationFrame(resize);
+        return{setFilter:setFilter,draw:draw};
+      }
+      var terrain3d = initTerrain3d();
+      var routeButtons = Array.prototype.slice.call(document.querySelectorAll('[data-route-filter]'));
+      var routeGroups = Array.prototype.slice.call(document.querySelectorAll('[data-route-day]'));
+      routeButtons.forEach(function(button){
+        button.addEventListener('click', function(){
+          var filter = button.getAttribute('data-route-filter');
+          routeButtons.forEach(function(item){
+            var active = item === button;
+            item.classList.toggle('active', active);
+            item.setAttribute('aria-pressed', active ? 'true' : 'false');
+          });
+          routeGroups.forEach(function(group){
+            group.classList.toggle('dimmed', filter !== 'all' && group.getAttribute('data-route-day') !== filter);
+          });
+          if (terrain3d) terrain3d.setFilter(filter);
+        });
+      });
     })();
   </script>
 </body>
