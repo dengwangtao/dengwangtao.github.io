@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>二维坐标绘制工具</title>
+  <meta name="description" content="在二维坐标系中绘制点、圆、凸包与不规则多边形，支持缩放、平移、撤销与 PNG 导出。" />
+  <meta name="directory-order" content="20" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --background: #07111f;
+      --panel: rgba(15, 31, 52, 0.9);
+      --panel-soft: rgba(17, 38, 63, 0.72);
+      --border: rgba(148, 184, 224, 0.18);
+      --text: #f4f8ff;
+      --muted: #96aac3;
+      --accent: #67e8f9;
+      --accent-strong: #22d3ee;
+      --success: #4ade80;
+      --danger: #fb7185;
+      --warning: #fbbf24;
+      --violet: #a78bfa;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { height: 100%; }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      color: var(--text);
+      background: #0d1b2d;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+    }
+
+    button, textarea { font: inherit; }
+
+    #canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: crosshair;
+      touch-action: none;
+      z-index: 0;
+    }
+
+    .topbar {
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      z-index: 30;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: rgba(7, 17, 31, 0.82);
+      backdrop-filter: blur(16px);
+      box-shadow: var(--shadow);
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+    }
+
+    .back-link:hover { color: var(--accent); }
+
+    .app-title {
+      margin: 0;
+      font-weight: 800;
+      font-size: 14px;
+      letter-spacing: -0.02em;
+    }
+
+    .topbar-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mode-group {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    button {
+      min-height: 38px;
+      padding: 0 12px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+      cursor: pointer;
+      transition: 150ms ease;
+      white-space: nowrap;
+    }
+
+    button:hover {
+      border-color: rgba(103, 232, 249, 0.5);
+      transform: translateY(-1px);
+    }
+
+    button.primary {
+      border-color: transparent;
+      color: #05202a;
+      background: linear-gradient(135deg, var(--accent), #93c5fd);
+      font-weight: 800;
+    }
+
+    .mode-group button {
+      min-height: 32px;
+      padding: 0 12px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .mode-group button:hover {
+      border: 0;
+      color: var(--text);
+      transform: none;
+    }
+
+    .mode-group button.active {
+      color: #05202a;
+      background: linear-gradient(135deg, var(--accent), #93c5fd);
+    }
+
+    .legend {
+      position: fixed;
+      bottom: 14px;
+      right: 14px;
+      z-index: 30;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(7, 17, 31, 0.78);
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow);
+    }
+
+    .legend .item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .swatch.point { background: var(--accent); }
+    .swatch.circle { background: transparent; border: 2px solid var(--accent-strong); }
+    .swatch.polygon { background: rgba(139, 92, 246, 0.5); border: 1px solid var(--violet); }
+    .swatch.hull { background: rgba(251, 191, 36, 0.5); border: 1px dashed var(--warning); border-radius: 3px; }
+
+    .status {
+      position: fixed;
+      bottom: 14px;
+      left: 14px;
+      z-index: 30;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      max-width: min(680px, 60vw);
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      color: var(--muted);
+      background: rgba(7, 17, 31, 0.78);
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow);
+      font-size: 13px;
+    }
+
+    .status-message.success { color: var(--success); }
+    .status-message.error { color: var(--danger); }
+
+    .status-meta {
+      color: var(--muted);
+      font: 12px/1.5 "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+      white-space: nowrap;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 72px;
+      right: 14px;
+      bottom: 64px;
+      width: min(330px, calc(100vw - 28px));
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: rgba(7, 17, 31, 0.84);
+      backdrop-filter: blur(16px);
+      box-shadow: var(--shadow);
+      transition: transform 180ms ease, opacity 180ms ease;
+    }
+
+    .drawer.closed {
+      transform: translateX(calc(100% + 24px));
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .drawer-title {
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .drawer-header button {
+      min-height: 28px;
+      padding: 0 10px;
+      font-size: 15px;
+      line-height: 1;
+    }
+
+    .drawer-body {
+      flex: 1;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 14px;
+    }
+
+    .panel-title {
+      margin-bottom: 8px;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .panel textarea {
+      width: 100%;
+      min-height: 80px;
+      resize: vertical;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      outline: none;
+      color: #dcecff;
+      background: rgba(255, 255, 255, 0.04);
+      font: 12px/1.55 "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+      tab-size: 2;
+    }
+
+    .panel textarea:focus { border-color: rgba(103, 232, 249, 0.5); }
+    .panel textarea::placeholder { color: #60758f; }
+
+    .input-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .input-actions button {
+      min-height: 32px;
+      padding: 0 10px;
+      font-size: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .topbar { top: 10px; left: 10px; right: 10px; }
+      .topbar-controls { width: 100%; }
+      .drawer {
+        top: auto;
+        right: 10px;
+        bottom: 60px;
+        left: 10px;
+        width: auto;
+        max-height: 46vh;
+      }
+      .drawer.closed { transform: translateY(calc(100% + 80px)); }
+      .legend { display: none; }
+      .status { max-width: calc(100vw - 20px); }
+    }
+
+    @media (max-width: 560px) {
+      .topbar { padding: 6px 8px; }
+      .topbar-controls button { padding: 0 9px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" aria-label="二维坐标画布"></canvas>
+
+  <header class="topbar">
+    <div class="topbar-left">
+      <a class="back-link" href="../index.html">← 目录</a>
+      <h1 class="app-title">二维坐标绘制</h1>
+    </div>
+    <div class="topbar-controls" role="group" aria-label="绘图工具">
+      <div class="mode-group" role="group" aria-label="绘制模式">
+        <button type="button" data-mode="point">点</button>
+        <button type="button" data-mode="circle">圆</button>
+        <button type="button" data-mode="hull">凸包</button>
+        <button type="button" data-mode="polygon">多边形</button>
+        <button type="button" data-mode="pan">平移</button>
+      </div>
+      <button type="button" id="undo-btn">撤销</button>
+      <button type="button" id="finish-btn">闭合</button>
+      <button type="button" id="hull-btn">生成凸包</button>
+      <button type="button" class="primary" id="sample-btn">示例</button>
+      <button type="button" id="clear-btn">清空</button>
+      <button type="button" id="download-btn">PNG</button>
+      <button type="button" id="drawer-toggle">数据输入</button>
+    </div>
+  </header>
+
+  <aside class="legend" aria-hidden="true">
+    <span class="item"><i class="swatch point"></i>点</span>
+    <span class="item"><i class="swatch circle"></i>圆</span>
+    <span class="item"><i class="swatch polygon"></i>多边形</span>
+    <span class="item"><i class="swatch hull"></i>凸包</span>
+  </aside>
+
+  <section class="status" aria-live="polite">
+    <span class="status-message" id="status-message">点模式：单击画布添加一个二维点。</span>
+    <span class="status-meta" id="counts">点 0 · 圆 0 · 多边形 0</span>
+    <span class="status-meta" id="cursor-pos">x 0  y 0</span>
+  </section>
+
+  <aside class="drawer" id="drawer">
+    <div class="drawer-header">
+      <span class="drawer-title">数据输入</span>
+      <button type="button" id="drawer-close" aria-label="收起输入面板">×</button>
+    </div>
+    <div class="drawer-body">
+      <section class="panel">
+        <div class="panel-title">精确坐标（每行 x, y）</div>
+        <textarea id="coord-input" spellcheck="false" placeholder="0, 0&#10;3, 2&#10;-1, 4"></textarea>
+        <div class="input-actions">
+          <button type="button" id="add-points-btn">添加为点</button>
+          <button type="button" id="add-polygon-btn">导入为多边形</button>
+        </div>
+      </section>
+      <section class="panel">
+        <div class="panel-title">JSON 输入（xzPoints 格式）</div>
+        <textarea id="json-input" spellcheck="false" placeholder='{&#10;  "xzPoints": [ { "x": 0, "y": 0 }, { "x": 4, "y": 0 }, { "x": 3, "y": 3 } ]&#10;}'></textarea>
+        <div class="input-actions">
+          <button type="button" id="render-json-btn">渲染多边形</button>
+          <button type="button" id="sample-json-btn">载入示例 JSON</button>
+        </div>
+      </section>
+    </div>
+  </aside>
+
+  <script>
+    const canvas = document.querySelector("#canvas");
+    const ctx = canvas.getContext("2d");
+    const statusMessage = document.querySelector("#status-message");
+    const countsEl = document.querySelector("#counts");
+    const cursorPos = document.querySelector("#cursor-pos");
+    const coordInput = document.querySelector("#coord-input");
+    const modeButtons = Array.from(document.querySelectorAll(".mode-group [data-mode]"));
+
+    let width = 0;
+    let height = 0;
+    let dpr = 1;
+    const view = { scale: 36, ox: 0, oy: 0 };
+
+    let points = [];
+    let circles = [];
+    let polygons = [];
+    let pointCounter = 0;
+    let circleCounter = 0;
+    let polygonCounter = 0;
+
+    let mode = "point";
+    let circleDraft = null;
+    let polyDraft = null;
+    let hover = null;
+    let panning = null;
+    const history = [];
+
+    const MODE_INSTRUCTIONS = {
+      point: "点模式：单击画布添加一个二维点。",
+      circle: "圆模式：第一次单击确定圆心，第二次单击确定半径。",
+      hull: "凸包模式：单击添加点，凸包会根据所有点自动更新。",
+      polygon: "多边形模式：依次单击添加顶点；靠近起点单击或点击「闭合」完成多边形。",
+      pan: "平移模式：按住并拖动画布平移，滚轮缩放。"
+    };
+
+    // ---------- 视图变换 ----------
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      dpr = window.devicePixelRatio || 1;
+      width = Math.max(1, rect.width);
+      height = Math.max(1, rect.height);
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      render();
+    }
+
+    function toScreen(x, y) {
+      return {
+        x: width / 2 + (x - view.ox) * view.scale,
+        y: height / 2 - (y - view.oy) * view.scale
+      };
+    }
+
+    function toWorld(sx, sy) {
+      return {
+        x: view.ox + (sx - width / 2) / view.scale,
+        y: view.oy - (sy - height / 2) / view.scale
+      };
+    }
+
+    function eventPos(event) {
+      const rect = canvas.getBoundingClientRect();
+      return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+    }
+
+    // ---------- 数值格式化 ----------
+    function formatTick(value, step) {
+      const decimals = step < 1 ? Math.min(8, Math.ceil(-Math.log10(step))) : 0;
+      const text = value.toFixed(decimals);
+      return text === "-0" ? "0" : text;
+    }
+
+    function fmtNum(value) {
+      const rounded = Math.round(value * 1000) / 1000;
+      return String(rounded);
+    }
+
+    // ---------- 凸包（Andrew 单调链） ----------
+    function convexHull(pts) {
+      const P = pts.map(p => ({ x: p.x, y: p.y })).sort((a, b) => a.x - b.x || a.y - b.y);
+      const n = P.length;
+      if (n <= 1) return P.slice();
+      const cross = (o, a, b) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+      const lower = [];
+      for (const p of P) {
+        while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop();
+        lower.push(p);
+      }
+      const upper = [];
+      for (let i = n - 1; i >= 0; i--) {
+        const p = P[i];
+        while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop();
+        upper.push(p);
+      }
+      lower.pop();
+      upper.pop();
+      return lower.concat(upper);
+    }
+
+    function isConvexPolygon(vertices) {
+      const n = vertices.length;
+      if (n < 3) return false;
+      let sign = 0;
+      for (let i = 0; i < n; i++) {
+        const a = vertices[i];
+        const b = vertices[(i + 1) % n];
+        const c = vertices[(i + 2) % n];
+        const cross = (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x);
+        if (Math.abs(cross) < 1e-9) continue;
+        const s = cross > 0 ? 1 : -1;
+        if (sign === 0) sign = s;
+        else if (sign !== s) return false;
+      }
+      return true;
+    }
+    // ---------- 渲染 ----------
+    function render() {
+      ctx.fillStyle = "#0d1b2d";
+      ctx.fillRect(0, 0, width, height);
+
+      drawGrid();
+      drawAxes();
+
+      polygons.forEach(drawPolygon);
+      circles.forEach(drawCircle);
+      points.forEach(drawPoint);
+
+      if (mode === "hull") drawLiveHull();
+      if (circleDraft) drawCircleDraft();
+      if (polyDraft) drawPolyDraft();
+
+      updateCounts();
+    }
+
+    function niceStep(minPx) {
+      const raw = minPx / view.scale;
+      const pow = Math.pow(10, Math.floor(Math.log10(raw)));
+      for (const m of [1, 2, 5, 10]) {
+        if (m * pow >= raw - 1e-12) return m * pow;
+      }
+      return 10 * pow;
+    }
+
+    function drawGrid() {
+      const step = niceStep(70);
+      const halfW = width / 2;
+      const halfH = height / 2;
+      const xMin = view.ox - halfW / view.scale;
+      const xMax = view.ox + halfW / view.scale;
+      const yMin = view.oy - halfH / view.scale;
+      const yMax = view.oy + halfH / view.scale;
+
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(148, 184, 224, 0.10)";
+      ctx.beginPath();
+      for (let x = Math.ceil(xMin / step) * step; x <= xMax; x += step) {
+        if (Math.abs(x) < step * 1e-9) continue;
+        const sx = halfW + (x - view.ox) * view.scale;
+        ctx.moveTo(sx, 0);
+        ctx.lineTo(sx, height);
+      }
+      for (let y = Math.ceil(yMin / step) * step; y <= yMax; y += step) {
+        if (Math.abs(y) < step * 1e-9) continue;
+        const sy = halfH - (y - view.oy) * view.scale;
+        ctx.moveTo(0, sy);
+        ctx.lineTo(width, sy);
+      }
+      ctx.stroke();
+
+      ctx.fillStyle = "#60758f";
+      ctx.font = '11px ui-sans-serif, system-ui, "Segoe UI", sans-serif';
+      ctx.textBaseline = "alphabetic";
+      for (let x = Math.ceil(xMin / step) * step; x <= xMax; x += step) {
+        if (Math.abs(x) < step * 1e-9) continue;
+        const sx = halfW + (x - view.ox) * view.scale;
+        ctx.textAlign = "center";
+        ctx.fillText(formatTick(x, step), sx, height - 8);
+      }
+      for (let y = Math.ceil(yMin / step) * step; y <= yMax; y += step) {
+        if (Math.abs(y) < step * 1e-9) continue;
+        const sy = halfH - (y - view.oy) * view.scale;
+        ctx.textAlign = "left";
+        ctx.fillText(formatTick(y, step), 8, sy - 5);
+      }
+    }
+
+    function drawAxes() {
+      const cx = width / 2 + (0 - view.ox) * view.scale;
+      const cy = height / 2 - (0 - view.oy) * view.scale;
+
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = "rgba(148, 184, 224, 0.55)";
+      ctx.beginPath();
+      if (cy >= 0 && cy <= height) { ctx.moveTo(0, cy); ctx.lineTo(width, cy); }
+      if (cx >= 0 && cx <= width) { ctx.moveTo(cx, 0); ctx.lineTo(cx, height); }
+      ctx.stroke();
+
+      ctx.fillStyle = "#96aac3";
+      ctx.font = 'bold 12px ui-sans-serif, system-ui, "Segoe UI", sans-serif';
+
+      if (cy >= 0 && cy <= height) {
+        drawArrowHead(width - 2, cy, 0);
+        ctx.textAlign = "left";
+        ctx.textBaseline = "alphabetic";
+        ctx.fillText("x", width - 24, cy + 16);
+      }
+      if (cx >= 0 && cx <= width) {
+        drawArrowHead(cx, 2, -Math.PI / 2);
+        ctx.textAlign = "left";
+        ctx.textBaseline = "top";
+        ctx.fillText("y", cx + 10, 6);
+      }
+      if (cx >= 0 && cx <= width && cy >= 0 && cy <= height) {
+        ctx.textAlign = "right";
+        ctx.textBaseline = "top";
+        ctx.fillText("O", cx - 6, cy + 4);
+      }
+    }
+
+    function drawArrowHead(x, y, angle) {
+      const size = 8;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(-size, -size * 0.6);
+      ctx.lineTo(-size, size * 0.6);
+      ctx.closePath();
+      ctx.fillStyle = "rgba(148, 184, 224, 0.9)";
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function roundedRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    function drawBadge(text, anchorX, anchorY, strokeColor, textColor) {
+      ctx.font = 'bold 11px ui-sans-serif, system-ui, "Segoe UI", sans-serif';
+      const w = ctx.measureText(text).width + 12;
+      const h = 18;
+      const x = anchorX + 7;
+      const y = anchorY - 25;
+      roundedRect(x, y, w, h, 9);
+      ctx.fillStyle = "rgba(7, 17, 31, 0.86)";
+      ctx.fill();
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.fillStyle = textColor;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(text, x + w / 2, y + h / 2);
+    }
+
+    function drawPoint(p) {
+      const s = toScreen(p.x, p.y);
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, 4.5, 0, Math.PI * 2);
+      ctx.fillStyle = "#67e8f9";
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = "#05202a";
+      ctx.stroke();
+      drawBadge(String(p.id), s.x, s.y, "rgba(103, 232, 249, 0.5)", "#a5e8f7");
+    }
+
+    function drawCircle(c) {
+      const s = toScreen(c.x, c.y);
+      const r = c.r * view.scale;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(34, 211, 238, 0.07)";
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#22d3ee";
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, 3, 0, Math.PI * 2);
+      ctx.fillStyle = "#22d3ee";
+      ctx.fill();
+
+      ctx.fillStyle = "#dcecff";
+      ctx.font = '12px ui-sans-serif, system-ui, "Segoe UI", sans-serif';
+      ctx.textAlign = "left";
+      ctx.textBaseline = "bottom";
+      ctx.fillText(`${c.id}  r=${fmtNum(c.r)}`, s.x + r * 0.7, s.y - r * 0.7);
+    }
+
+    function drawPolygon(p) {
+      if (!p.vertices || p.vertices.length < 2) return;
+      ctx.beginPath();
+      const first = toScreen(p.vertices[0].x, p.vertices[0].y);
+      ctx.moveTo(first.x, first.y);
+      for (let i = 1; i < p.vertices.length; i++) {
+        const s = toScreen(p.vertices[i].x, p.vertices[i].y);
+        ctx.lineTo(s.x, s.y);
+      }
+      ctx.closePath();
+
+      if (p.hull) {
+        ctx.fillStyle = "rgba(251, 191, 36, 0.14)";
+        ctx.strokeStyle = "#fbbf24";
+        ctx.setLineDash([7, 5]);
+      } else {
+        ctx.fillStyle = "rgba(139, 92, 246, 0.16)";
+        ctx.strokeStyle = "#a78bfa";
+        ctx.setLineDash([]);
+      }
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      p.vertices.forEach((v, i) => {
+        const s = toScreen(v.x, v.y);
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, 3, 0, Math.PI * 2);
+        ctx.fillStyle = p.hull ? "#fbbf24" : "#a78bfa";
+        ctx.fill();
+        drawBadge(String(i), s.x, s.y,
+          p.hull ? "rgba(251, 191, 36, 0.55)" : "rgba(167, 139, 250, 0.55)",
+          p.hull ? "#fde68a" : "#ddd6fe");
+      });
+
+      const c = centroid(p.vertices);
+      const s = toScreen(c.x, c.y);
+      ctx.fillStyle = p.hull ? "#fbbf24" : "#c4b5fd";
+      ctx.font = '12px ui-sans-serif, system-ui, "Segoe UI", sans-serif';
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(p.id, s.x, s.y);
+    }
+
+    function centroid(vertices) {
+      let x = 0;
+      let y = 0;
+      vertices.forEach(v => { x += v.x; y += v.y; });
+      return { x: x / vertices.length, y: y / vertices.length };
+    }
+
+    function drawLiveHull() {
+      if (points.length < 3) return;
+      const hull = convexHull(points.map(p => ({ x: p.x, y: p.y })));
+      if (hull.length < 3) return;
+      drawPolygon({ id: "凸包", vertices: hull, hull: true });
+    }
+
+    function drawCircleDraft() {
+      const s = toScreen(circleDraft.x, circleDraft.y);
+      const r = hover ? Math.hypot(hover.x - circleDraft.x, hover.y - circleDraft.y) * view.scale : 0;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
+      ctx.setLineDash([6, 4]);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#67e8f9";
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = "#67e8f9";
+      ctx.fill();
+
+      if (hover && r > 1) {
+        ctx.fillStyle = "#9be8f5";
+        ctx.font = '12px ui-sans-serif, system-ui, "Segoe UI", sans-serif';
+        ctx.textAlign = "left";
+        ctx.textBaseline = "bottom";
+        ctx.fillText(`r = ${fmtNum(r / view.scale)}`, s.x + 8, s.y - 8);
+      }
+    }
+
+    function drawPolyDraft() {
+      const verts = polyDraft;
+      if (verts.length) {
+        ctx.beginPath();
+        const f = toScreen(verts[0].x, verts[0].y);
+        ctx.moveTo(f.x, f.y);
+        for (let i = 1; i < verts.length; i++) {
+          const s = toScreen(verts[i].x, verts[i].y);
+          ctx.lineTo(s.x, s.y);
+        }
+        if (hover) {
+          const h = toScreen(hover.x, hover.y);
+          ctx.lineTo(h.x, h.y);
+        }
+        ctx.setLineDash([6, 4]);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#a78bfa";
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      verts.forEach((v, i) => {
+        const s = toScreen(v.x, v.y);
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = i === 0 ? "#67e8f9" : "#a78bfa";
+        ctx.fill();
+        drawBadge(String(i), s.x, s.y,
+          i === 0 ? "rgba(103, 232, 249, 0.55)" : "rgba(167, 139, 250, 0.55)",
+          i === 0 ? "#a5e8f7" : "#ddd6fe");
+      });
+
+      if (verts.length >= 3) {
+        const f = toScreen(verts[0].x, verts[0].y);
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, 7, 0, Math.PI * 2);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#fbbf24";
+        ctx.stroke();
+      }
+    }
+
+    // ---------- 状态管理 ----------
+    function snapshot() {
+      return JSON.stringify({ points, circles, polygons, pointCounter, circleCounter, polygonCounter });
+    }
+
+    function pushHistory() {
+      history.push(snapshot());
+      if (history.length > 200) history.shift();
+    }
+
+    function restore(s) {
+      points = s.points;
+      circles = s.circles;
+      polygons = s.polygons;
+      pointCounter = s.pointCounter;
+      circleCounter = s.circleCounter;
+      polygonCounter = s.polygonCounter;
+      circleDraft = null;
+      polyDraft = null;
+    }
+
+    function updateCounts() {
+      countsEl.textContent = `点 ${points.length} · 圆 ${circles.length} · 多边形 ${polygons.length}`;
+    }
+
+    function setStatus(message, type) {
+      statusMessage.textContent = message;
+      statusMessage.className = "status-message" + (type ? " " + type : "");
+    }
+
+    function updateCursorHud(w) {
+      cursorPos.textContent = `x ${fmtNum(w.x)}  y ${fmtNum(w.y)}`;
+    }
+
+    function addPoint(x, y) {
+      pushHistory();
+      points.push({ id: String(pointCounter), x, y });
+      pointCounter++;
+    }
+
+    function addPoints(list) {
+      if (!list.length) return;
+      pushHistory();
+      list.forEach(pt => {
+        points.push({ id: String(pointCounter), x: pt.x, y: pt.y });
+        pointCounter++;
+      });
+    }
+
+    function finalizeCircle(center, r) {
+      pushHistory();
+      circles.push({ id: "C" + (++circleCounter), x: center.x, y: center.y, r });
+      circleDraft = null;
+    }
+
+    function finalizePolygon(vertices) {
+      pushHistory();
+      polygons.push({
+        id: "多边形 " + (++polygonCounter),
+        vertices: vertices.map(v => ({ x: v.x, y: v.y })),
+        hull: false
+      });
+      polyDraft = null;
+    }
+
+    function materializeHull() {
+      const hull = convexHull(points.map(p => ({ x: p.x, y: p.y })));
+      if (hull.length < 3) {
+        setStatus("至少需要 3 个不共线的点才能生成凸包。", "error");
+        return;
+      }
+      pushHistory();
+      polygons.push({ id: "凸包 " + (++polygonCounter), vertices: hull, hull: true });
+      render();
+      setStatus(`已由 ${points.length} 个点生成凸包（${hull.length} 个顶点）。`, "success");
+    }
+
+    function undo() {
+      if (!history.length) {
+        setStatus("没有可以撤销的操作。");
+        return;
+      }
+      restore(JSON.parse(history.pop()));
+      render();
+      setStatus("已撤销上一步操作。");
+    }
+
+    function clearAll() {
+      pushHistory();
+      points = [];
+      circles = [];
+      polygons = [];
+      pointCounter = 0;
+      circleCounter = 0;
+      polygonCounter = 0;
+      circleDraft = null;
+      polyDraft = null;
+      render();
+      setStatus("画布已清空。");
+    }
+
+    function loadSample() {
+      pushHistory();
+      pointCounter = 9;
+      circleCounter = 1;
+      polygonCounter = 2;
+      points = [
+        { id: "0", x: 0, y: 0 },
+        { id: "1", x: 3, y: 2 },
+        { id: "2", x: 5, y: 1 },
+        { id: "3", x: 6, y: 5 },
+        { id: "4", x: 2, y: 7 },
+        { id: "5", x: -3, y: 4 },
+        { id: "6", x: -5, y: 1 },
+        { id: "7", x: -2, y: -4 },
+        { id: "8", x: 4, y: -3 }
+      ];
+      circles = [{ id: "C1", x: -1, y: 1, r: 2.2 }];
+      polygons = [
+        {
+          id: "多边形 1",
+          hull: false,
+          vertices: [
+            { x: 0, y: 0 },
+            { x: 5, y: 0 },
+            { x: 5, y: 2 },
+            { x: 2, y: 2 },
+            { x: 2, y: 5 },
+            { x: 0, y: 5 }
+          ]
+        },
+        {
+          id: "凸包 1",
+          hull: true,
+          vertices: convexHull(points.map(p => ({ x: p.x, y: p.y })))
+        }
+      ];
+      circleDraft = null;
+      polyDraft = null;
+      render();
+      setStatus("已载入示例：点、圆、凹多边形与凸包。", "success");
+    }
+
+    function parseCoordInput() {
+      const result = [];
+      coordInput.value.split(/\r?\n/).forEach(raw => {
+        const parts = raw.trim().split(/[\s,，;；\t]+/).filter(Boolean);
+        if (parts.length < 2) return;
+        const x = Number(parts[0]);
+        const y = Number(parts[1]);
+        if (Number.isFinite(x) && Number.isFinite(y)) result.push({ x, y });
+      });
+      return result;
+    }
+
+    function downloadPNG() {
+      const link = document.createElement("a");
+      link.download = "二维坐标绘制.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+      setStatus("已导出 PNG 图片。", "success");
+    }
+
+    // ---------- 模式切换 ----------
+    function setMode(next) {
+      mode = next;
+      circleDraft = null;
+      polyDraft = null;
+      modeButtons.forEach(btn => btn.classList.toggle("active", btn.dataset.mode === next));
+      canvas.style.cursor = next === "pan" ? "grab" : "crosshair";
+      setStatus(MODE_INSTRUCTIONS[next]);
+      render();
+    }
+
+    // ---------- 交互事件 ----------
+    canvas.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      canvas.setPointerCapture(event.pointerId);
+      const pos = eventPos(event);
+
+      if (event.button === 2 || event.button === 1 || mode === "pan") {
+        panning = { x: pos.x, y: pos.y, ox: view.ox, oy: view.oy };
+        canvas.style.cursor = "grabbing";
+        return;
+      }
+      if (event.button !== 0) return;
+
+      const w = toWorld(pos.x, pos.y);
+      hover = w;
+
+      if (mode === "point" || mode === "hull") {
+        addPoint(w.x, w.y);
+        if (mode === "hull") {
+          setStatus(`凸包模式：已添加点，共 ${points.length} 个点。`);
+        } else {
+          setStatus(`点模式：已添加点 ${points[points.length - 1].id}`);
+        }
+      } else if (mode === "circle") {
+        if (!circleDraft) {
+          circleDraft = { x: w.x, y: w.y };
+          setStatus("圆模式：已确定圆心，请单击确定半径。");
+        } else {
+          const r = Math.hypot(w.x - circleDraft.x, w.y - circleDraft.y);
+          if (r < 1e-9) {
+            setStatus("圆的半径太小，请重新选择半径点。", "error");
+            return;
+          }
+          finalizeCircle(circleDraft, r);
+          setStatus("圆已绘制。继续单击确定下一个圆心。", "success");
+        }
+      } else if (mode === "polygon") {
+        if (!polyDraft) polyDraft = [];
+        if (polyDraft.length >= 3) {
+          const f = toScreen(polyDraft[0].x, polyDraft[0].y);
+          if (Math.hypot(pos.x - f.x, pos.y - f.y) < 14) {
+            finalizePolygon(polyDraft);
+            setStatus("多边形已闭合。", "success");
+            render();
+            return;
+          }
+        }
+        polyDraft.push({ x: w.x, y: w.y });
+        setStatus(`多边形模式：已添加第 ${polyDraft.length} 个顶点。`);
+      }
+      render();
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      const pos = eventPos(event);
+      const w = toWorld(pos.x, pos.y);
+
+      if (panning) {
+        view.ox = panning.ox - (pos.x - panning.x) / view.scale;
+        view.oy = panning.oy + (pos.y - panning.y) / view.scale;
+        render();
+        return;
+      }
+
+      hover = w;
+      updateCursorHud(w);
+      if ((mode === "circle" && circleDraft) || (mode === "polygon" && polyDraft && polyDraft.length)) {
+        render();
+      }
+    });
+
+    function endPan() {
+      panning = null;
+      canvas.style.cursor = mode === "pan" ? "grab" : "crosshair";
+    }
+    canvas.addEventListener("pointerup", endPan);
+    canvas.addEventListener("pointercancel", endPan);
+
+    canvas.addEventListener("wheel", (event) => {
+      event.preventDefault();
+      const pos = eventPos(event);
+      const factor = Math.exp(-event.deltaY * 0.0012);
+      const newScale = Math.max(4, Math.min(3000, view.scale * factor));
+      const w = toWorld(pos.x, pos.y);
+      view.scale = newScale;
+      view.ox = w.x - (pos.x - width / 2) / view.scale;
+      view.oy = w.y + (pos.y - height / 2) / view.scale;
+      render();
+    }, { passive: false });
+
+    canvas.addEventListener("contextmenu", (event) => event.preventDefault());
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      if (circleDraft) {
+        circleDraft = null;
+        render();
+        setStatus("已取消当前圆。");
+      } else if (polyDraft) {
+        polyDraft = null;
+        render();
+        setStatus("已取消当前多边形。");
+      }
+    });
+
+    window.addEventListener("resize", resizeCanvas);
+
+    modeButtons.forEach(btn => btn.addEventListener("click", () => setMode(btn.dataset.mode)));
+
+    document.querySelector("#undo-btn").addEventListener("click", undo);
+    document.querySelector("#clear-btn").addEventListener("click", clearAll);
+    document.querySelector("#sample-btn").addEventListener("click", loadSample);
+    document.querySelector("#download-btn").addEventListener("click", downloadPNG);
+    document.querySelector("#hull-btn").addEventListener("click", materializeHull);
+
+    document.querySelector("#finish-btn").addEventListener("click", () => {
+      if (!polyDraft || polyDraft.length < 3) {
+        setStatus("当前没有可闭合的多边形（至少需要 3 个顶点）。", "error");
+        return;
+      }
+      finalizePolygon(polyDraft);
+      render();
+      setStatus("多边形已闭合。", "success");
+    });
+
+    document.querySelector("#add-points-btn").addEventListener("click", () => {
+      const list = parseCoordInput();
+      if (!list.length) {
+        setStatus("请在输入框中填写坐标，例如每行「x, y」。", "error");
+        return;
+      }
+      addPoints(list);
+      render();
+      setStatus(`已添加 ${list.length} 个点。`, "success");
+    });
+
+    document.querySelector("#add-polygon-btn").addEventListener("click", () => {
+      const list = parseCoordInput();
+      if (list.length < 3) {
+        setStatus("导入为多边形至少需要 3 个顶点。", "error");
+        return;
+      }
+      pushHistory();
+      const convex = isConvexPolygon(list);
+      polygons.push({ id: (convex ? "凸包 " : "多边形 ") + (++polygonCounter), vertices: list, hull: convex });
+      render();
+      setStatus(`已导入 ${list.length} 个顶点的${convex ? "凸包" : "多边形"}。`, "success");
+    });
+
+    // ---------- JSON 输入渲染 ----------
+    const jsonInput = document.querySelector("#json-input");
+
+    function fitToBounds(pts) {
+      if (!pts || !pts.length) return;
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      pts.forEach(p => {
+        minX = Math.min(minX, p.x);
+        maxX = Math.max(maxX, p.x);
+        minY = Math.min(minY, p.y);
+        maxY = Math.max(maxY, p.y);
+      });
+      const pad = 0.18;
+      const spanX = (maxX - minX) || 1;
+      const spanY = (maxY - minY) || 1;
+      view.ox = (minX + maxX) / 2;
+      view.oy = (minY + maxY) / 2;
+      view.scale = Math.min(width / (spanX * (1 + pad * 2)), height / (spanY * (1 + pad * 2)));
+      view.scale = Math.max(4, Math.min(3000, view.scale));
+    }
+
+    function parseJsonPolygons() {
+      const text = jsonInput.value.trim();
+      if (!text) throw new Error("请先粘贴 JSON 数据。");
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        throw new Error("JSON 解析失败：" + e.message);
+      }
+      const items = Array.isArray(data) ? data : [data];
+      const result = [];
+      items.forEach((item, idx) => {
+        if (!item || typeof item !== "object") return;
+        const pts = item.xzPoints || item.points || item.vertices;
+        if (!Array.isArray(pts)) {
+          throw new Error(`第 ${idx + 1} 个对象缺少 xzPoints 数组。`);
+        }
+        const vertices = [];
+        pts.forEach(p => {
+          const x = Number(p && p.x);
+          const y = Number(p && p.y);
+          if (Number.isFinite(x) && Number.isFinite(y)) vertices.push({ x, y });
+        });
+        if (vertices.length < 3) {
+          throw new Error(`第 ${idx + 1} 个对象的 xzPoints 至少需要 3 个有效点。`);
+        }
+        result.push({ vertices, meta: item });
+      });
+      if (!result.length) throw new Error("未找到可渲染的多边形。");
+      return result;
+    }
+
+    function renderJsonPolygons() {
+      try {
+        const list = parseJsonPolygons();
+        pushHistory();
+        list.forEach(p => {
+          const convex = isConvexPolygon(p.vertices);
+          polygons.push({
+            id: (convex ? "凸包 " : "多边形 ") + (++polygonCounter),
+            vertices: p.vertices,
+            hull: convex,
+            meta: p.meta
+          });
+        });
+        fitToBounds(list.flatMap(p => p.vertices));
+        render();
+        const totalVerts = list.reduce((n, p) => n + p.vertices.length, 0);
+        const firstMeta = list[0].meta;
+        const heightInfo = firstMeta && firstMeta.heightY !== undefined ? ` · 高度 ${firstMeta.heightY}` : "";
+        setStatus(`已渲染 ${list.length} 个多边形（共 ${totalVerts} 个顶点）${heightInfo}`, "success");
+      } catch (e) {
+        setStatus(e.message, "error");
+      }
+    }
+
+    function loadSampleJson() {
+      jsonInput.value = JSON.stringify([
+        {
+          "xzPoints": [
+            { "x": -2.38, "y": -9.3 },
+            { "x": 14.19, "y": -9.73 },
+            { "x": 14.71, "y": 5.88 },
+            { "x": -1.82, "y": 4.42 }
+          ],
+          "heightY": 10.0,
+          "originPos": { "x": 27.88, "y": 8.95, "z": 103.41 },
+          "eulerAngles": { "x": -0.0, "y": 0.0, "z": 0.0 }
+        },
+        {
+          "xzPoints": [
+            { "x": 0, "y": 0 },
+            { "x": 4, "y": 0 },
+            { "x": 4, "y": 3 },
+            { "x": 2, "y": 1 },
+            { "x": 0, "y": 3 }
+          ],
+          "heightY": 4.5
+        }
+      ], null, 2);
+      setStatus("已载入示例 JSON，点击「渲染多边形」查看。");
+    }
+
+    document.querySelector("#render-json-btn").addEventListener("click", renderJsonPolygons);
+    document.querySelector("#sample-json-btn").addEventListener("click", loadSampleJson);
+    const drawer = document.querySelector("#drawer");
+    document.querySelector("#drawer-toggle").addEventListener("click", () => drawer.classList.toggle("closed"));
+    document.querySelector("#drawer-close").addEventListener("click", () => drawer.classList.add("closed"));
+    if (window.innerWidth < 900) drawer.classList.add("closed");
+    // ---------- 初始化 ----------
+    resizeCanvas();
+    setMode("point");
+  </script>
+</body>
+</html>
